@@ -1,0 +1,425 @@
+import 'dart:async';
+import 'dart:convert' show jsonDecode;
+import 'dart:io';
+import 'dart:isolate';
+import 'dart:math' show log, pow;
+
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
+import 'package:app_links/app_links.dart';
+import 'package:deferred_type/deferred_type.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
+
+void main(List<String> argv) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    final initialLink = Platform.isAndroid
+        ? await appLinks.getInitialAppLink()
+        : Uri.parse(argv.first);
+    runApp(MyApp(initialUrl: initialLink));
+  } on StateError {
+    runApp(const MyApp());
+  }
+}
+
+const kTag = "main.dart";
+
+const methodChannel = MethodChannel("com.arafatamim.multistreamer/youtubedl");
+
+final appLinks = AppLinks();
+
+void dumpJsonAndroid(args) async {
+  final dataPort = args[0] as SendPort;
+  final url = args[1] as String;
+
+  try {
+    final data = await methodChannel.invokeMethod<String>(
+      "dumpJson",
+      {"url": url},
+    ).then(
+      (value) => value != null ? jsonDecode(value) : null,
+    );
+    dataPort.send(Deferred.success(data));
+  } catch (e) {
+    dataPort.send(Deferred.error("$e", null));
+  }
+}
+
+void dumpJsonLinux(args) async {
+  final port = args[0] as SendPort;
+  final url = args[1] as String;
+
+  final process = await Process.run(
+    "yt-dlp",
+    ["--dump-json", url.toString()],
+  );
+  if (process.stdout == "" && process.stderr.trim() != "") {
+    port.send(Deferred.error("${process.stderr}", null));
+  } else {
+    final data = jsonDecode(process.stdout);
+    port.send(Deferred.success(data));
+  }
+}
+
+String formatSize(int bytes, [decimals = 2]) {
+  const k = 1024;
+  final dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+
+  final i = (log(bytes) / log(k)).floor();
+  return "${(bytes / pow(k, i)).toStringAsFixed(dm)} ${sizes[i]}";
+}
+
+Future<void> launchIntent({required String url, required String title}) {
+  final intent = AndroidIntent(
+    action: "action_view",
+    data: url,
+    type: "video/*",
+    flags: [
+      Flag.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
+      Flag.FLAG_GRANT_PREFIX_URI_PERMISSION,
+      Flag.FLAG_GRANT_WRITE_URI_PERMISSION,
+      Flag.FLAG_GRANT_READ_URI_PERMISSION
+    ],
+    arguments: {"title": title},
+  );
+  return intent.launch();
+}
+
+class Boilerplate extends StatelessWidget {
+  final ValueSetter<String> onSubmit;
+  final TextEditingController? controller;
+  final Widget child;
+
+  const Boilerplate({
+    super.key,
+    required this.onSubmit,
+    required this.child,
+    this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        children: [
+          Header(
+            onSubmit: onSubmit,
+            textEditingController: controller,
+            key: key,
+          ),
+          Expanded(child: child)
+        ],
+      ),
+    );
+  }
+}
+
+class Header extends StatelessWidget {
+  final TextEditingController? textEditingController;
+  final ValueSetter<String> onSubmit;
+  const Header({
+    super.key,
+    this.textEditingController,
+    required this.onSubmit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: textEditingController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: "Share or enter a url to play...",
+            ),
+            textInputAction: TextInputAction.go,
+            onSubmitted: onSubmit,
+          ),
+        ),
+        IconButton(
+          onPressed: () {
+            if (textEditingController != null) {
+              onSubmit(textEditingController!.text);
+            }
+          },
+          icon: const Icon(Icons.arrow_circle_right),
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.settings),
+        ),
+      ],
+    );
+  }
+}
+
+class MyApp extends StatelessWidget {
+  final Uri? initialUrl;
+
+  const MyApp({super.key, this.initialUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'MultiStreamer',
+      theme: ThemeData(
+        colorScheme: const ColorScheme.dark(
+          surface: Colors.transparent,
+          secondary: Colors.pink,
+          primary: Colors.pink,
+        ),
+      ),
+      home: MyHomePage(
+        title: 'MultiStreamer',
+        initialUrl: initialUrl,
+      ),
+    );
+  }
+}
+
+class VideoInfo extends StatelessWidget {
+  final Map<String, dynamic> data;
+
+  const VideoInfo({
+    Key? key,
+    required this.data,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          [data["extractor"], data["uploader"], data["uploader_id"]]
+              .where((element) => element != null)
+              .join(" - ")
+              .toUpperCase(),
+          style: const TextStyle(
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          data["title"],
+          style: const TextStyle(fontSize: 24),
+        ),
+      ],
+    );
+  }
+}
+
+class VideoSources extends StatelessWidget {
+  final Map<String, dynamic> data;
+
+  const VideoSources({
+    super.key,
+    required this.data,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      shrinkWrap: true,
+      children: [
+        for (final item in data["formats"].reversed) ...[
+          ListTile(
+            title: Text(item["resolution"] ?? "Unknown resolution"),
+            subtitle: Text(
+              [
+                item["format"],
+                item["filesize_approx"] != null
+                    ? formatSize(
+                        item["filesize_approx"],
+                      )
+                    : null
+              ].where((element) => element != null).join(" - "),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            tileColor: Colors.black12,
+            onTap: () async {
+              await launchIntent(
+                url: item['url'],
+                title: data['title'],
+              );
+            },
+          ),
+          const SizedBox(height: 8)
+        ]
+      ],
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  final String title;
+
+  final Uri? initialUrl;
+  const MyHomePage({super.key, required this.title, this.initialUrl});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  late final StreamSubscription _incomingLinksSub;
+  late final TextEditingController _textEditingController;
+  late final ReceivePort _dataPort;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: StreamBuilder(
+        initialData: const Deferred.idle(),
+        stream: _dataPort,
+        builder: (context, snapshot) {
+          final data = snapshot.data as Deferred<dynamic>;
+          return data.when(
+            success: (data) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                launchIntent(
+                  url: data["formats"].last["url"],
+                  title: data["title"],
+                );
+              });
+              return Row(
+                children: [
+                  Flexible(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Header(
+                            onSubmit: _setUrl,
+                            textEditingController: _textEditingController,
+                          ),
+                          const Spacer(),
+                          VideoInfo(data: data),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Flexible(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: VideoSources(data: data),
+                    ),
+                  )
+                ],
+              );
+            },
+            error: (err, stackTrace) {
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("$err"),
+                    duration: const Duration(seconds: 15),
+                  ),
+                );
+              });
+              return Boilerplate(
+                controller: _textEditingController,
+                onSubmit: _setUrl,
+                child: const Center(
+                  child: Icon(Icons.error),
+                ),
+              );
+            },
+            inProgress: () => Boilerplate(
+              controller: _textEditingController,
+              onSubmit: _setUrl,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            idle: () => Boilerplate(
+              controller: _textEditingController,
+              onSubmit: _setUrl,
+              child: Center(
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(color: Colors.white30),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _incomingLinksSub.cancel();
+    _textEditingController.dispose();
+    _dataPort.close();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    final initialUrl = widget.initialUrl;
+
+    _textEditingController = TextEditingController(
+      text: initialUrl?.toString(),
+    );
+    _dataPort = ReceivePort();
+
+    if (initialUrl != null) {
+      _dataPort.sendPort.send(const Deferred.inProgress());
+      _fetchJson(initialUrl);
+    } else {
+      _dataPort.sendPort.send(const Deferred.idle());
+    }
+
+    if (Platform.isAndroid) {
+      _incomingLinksSub = appLinks.uriLinkStream.listen((link) {
+        _dataPort.sendPort.send(const Deferred.inProgress());
+        setState(() {
+          _textEditingController.text = link.toString();
+        });
+        _fetchJson(link);
+      }, onError: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("$error")),
+        );
+      });
+    }
+  }
+
+  void _fetchJson(Uri url) {
+    final args = [_dataPort.sendPort, url.toString()];
+    if (Platform.isLinux) {
+      Isolate.spawn(dumpJsonLinux, args);
+    } else {
+      dumpJsonAndroid(args);
+    }
+  }
+
+  void _setUrl(String value) {
+    try {
+      final url = Uri.parse(value);
+      _dataPort.sendPort.send(const Deferred.inProgress());
+      _fetchJson(url);
+    } on FormatException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Not a valid URL!")),
+      );
+    }
+  }
+}
