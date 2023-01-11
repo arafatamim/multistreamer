@@ -1,16 +1,16 @@
 import 'dart:async';
-import 'dart:convert' show jsonDecode;
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math' show log, pow;
 
+import "package:multistreamer/utils.dart";
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:app_links/app_links.dart';
 import 'package:deferred_type/deferred_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
+import 'package:multistreamer/fetcher/youtube_dl.dart';
+import 'package:multistreamer/video_info.dart';
 
 void main(List<String> argv) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,42 +26,7 @@ void main(List<String> argv) async {
 
 const kTag = "main.dart";
 
-const methodChannel = MethodChannel("com.arafatamim.multistreamer/youtubedl");
-
 final appLinks = AppLinks();
-
-void dumpJsonAndroid(args) async {
-  final dataPort = args[0] as SendPort;
-  final url = args[1] as String;
-
-  try {
-    final data = await methodChannel.invokeMethod<String>(
-      "dumpJson",
-      {"url": url},
-    ).then(
-      (value) => value != null ? jsonDecode(value) : null,
-    );
-    dataPort.send(Deferred.success(data));
-  } catch (e) {
-    dataPort.send(Deferred.error("$e", null));
-  }
-}
-
-void dumpJsonLinux(args) async {
-  final port = args[0] as SendPort;
-  final url = args[1] as String;
-
-  final process = await Process.run(
-    "yt-dlp",
-    ["--dump-json", url.toString()],
-  );
-  if (process.stdout == "" && process.stderr.trim() != "") {
-    port.send(Deferred.error("${process.stderr}", null));
-  } else {
-    final data = jsonDecode(process.stdout);
-    port.send(Deferred.success(data));
-  }
-}
 
 String formatSize(int bytes, [decimals = 2]) {
   const k = 1024;
@@ -183,10 +148,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class VideoInfo extends StatelessWidget {
-  final Map<String, dynamic> data;
+class VideoHeaders extends StatelessWidget {
+  final VideoInfo data;
 
-  const VideoInfo({
+  const VideoHeaders({
     Key? key,
     required this.data,
   }) : super(key: key);
@@ -198,7 +163,7 @@ class VideoInfo extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(
-          [data["extractor"], data["uploader"], data["uploader_id"]]
+          [data.provider, data.uploader, data.uploaderId]
               .where((element) => element != null)
               .join(" - ")
               .toUpperCase(),
@@ -208,7 +173,7 @@ class VideoInfo extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          data["title"],
+          data.title,
           style: const TextStyle(fontSize: 24),
         ),
       ],
@@ -217,7 +182,7 @@ class VideoInfo extends StatelessWidget {
 }
 
 class VideoSources extends StatelessWidget {
-  final Map<String, dynamic> data;
+  final VideoInfo data;
 
   const VideoSources({
     super.key,
@@ -229,17 +194,13 @@ class VideoSources extends StatelessWidget {
     return ListView(
       shrinkWrap: true,
       children: [
-        for (final item in data["formats"].reversed) ...[
+        for (final item in data.formats.reversed) ...[
           ListTile(
-            title: Text(item["resolution"] ?? "Unknown resolution"),
+            title: Text(item.resolution ?? "Unknown resolution"),
             subtitle: Text(
               [
-                item["format"],
-                item["filesize_approx"] != null
-                    ? formatSize(
-                        item["filesize_approx"],
-                      )
-                    : null
+                item.displayFormat,
+                item.bytes.map(formatSize),
               ].where((element) => element != null).join(" - "),
             ),
             shape: RoundedRectangleBorder(
@@ -248,8 +209,8 @@ class VideoSources extends StatelessWidget {
             tileColor: Colors.black12,
             onTap: () async {
               await launchIntent(
-                url: item['url'],
-                title: data['title'],
+                url: item.url,
+                title: data.title,
               );
             },
           ),
@@ -273,22 +234,22 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late final StreamSubscription _incomingLinksSub;
   late final TextEditingController _textEditingController;
-  late final ReceivePort _dataPort;
+  late final StreamController<Deferred<VideoInfo>> _dataStreamController;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder(
+      body: StreamBuilder<Deferred<VideoInfo>>(
         initialData: const Deferred.idle(),
-        stream: _dataPort,
+        stream: _dataStreamController.stream,
         builder: (context, snapshot) {
-          final data = snapshot.data as Deferred<dynamic>;
+          final data = snapshot.data as Deferred<VideoInfo>;
           return data.when(
             success: (data) {
               SchedulerBinding.instance.addPostFrameCallback((_) {
                 launchIntent(
-                  url: data["formats"].last["url"],
-                  title: data["title"],
+                  url: data.formats.last.url,
+                  title: data.title,
                 );
               });
               return Row(
@@ -305,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             textEditingController: _textEditingController,
                           ),
                           const Spacer(),
-                          VideoInfo(data: data),
+                          VideoHeaders(data: data),
                         ],
                       ),
                     ),
@@ -365,7 +326,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _incomingLinksSub.cancel();
     _textEditingController.dispose();
-    _dataPort.close();
+    _dataStreamController.close();
     super.dispose();
   }
 
@@ -378,18 +339,18 @@ class _MyHomePageState extends State<MyHomePage> {
     _textEditingController = TextEditingController(
       text: initialUrl?.toString(),
     );
-    _dataPort = ReceivePort();
+    _dataStreamController = StreamController();
 
     if (initialUrl != null) {
-      _dataPort.sendPort.send(const Deferred.inProgress());
+      _dataStreamController.add(const Deferred.inProgress());
       _fetchJson(initialUrl);
     } else {
-      _dataPort.sendPort.send(const Deferred.idle());
+      _dataStreamController.add(const Deferred.idle());
     }
 
     if (Platform.isAndroid) {
       _incomingLinksSub = appLinks.uriLinkStream.listen((link) {
-        _dataPort.sendPort.send(const Deferred.inProgress());
+        _dataStreamController.add(const Deferred.inProgress());
         setState(() {
           _textEditingController.text = link.toString();
         });
@@ -402,19 +363,21 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _fetchJson(Uri url) {
-    final args = [_dataPort.sendPort, url.toString()];
-    if (Platform.isLinux) {
-      Isolate.spawn(dumpJsonLinux, args);
-    } else {
-      dumpJsonAndroid(args);
+  void _fetchJson(Uri url) async {
+    VideoInfo videoInfo;
+
+    try {
+      videoInfo = await YouTubeDL().fetchVideoInfo(url);
+      _dataStreamController.add(Deferred.success(videoInfo));
+    } catch (e, stack) {
+      _dataStreamController.add(Deferred.error(e, stack));
     }
   }
 
   void _setUrl(String value) {
     try {
       final url = Uri.parse(value);
-      _dataPort.sendPort.send(const Deferred.inProgress());
+      _dataStreamController.add(const Deferred.inProgress());
       _fetchJson(url);
     } on FormatException {
       ScaffoldMessenger.of(context).showSnackBar(
