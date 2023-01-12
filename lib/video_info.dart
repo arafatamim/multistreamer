@@ -7,12 +7,12 @@ class VideoFormat with _$VideoFormat {
   const factory VideoFormat({
     required String url,
     String? displayFormat,
-    int? quality,
+    num? quality,
     num? width,
     num? height,
     num? aspectRatio,
     String? resolution,
-    int? bytes,
+    num? bytes,
   }) = _VideoFormat;
 }
 
@@ -25,7 +25,7 @@ class VideoInfo with _$VideoInfo {
     String? uploaderId,
     String? filename,
     DateTime? uploadDate,
-    int? duration,
+    num? duration,
     required List<VideoFormat> formats,
   }) = _VideoInfo;
 }

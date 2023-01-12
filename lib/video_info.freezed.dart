@@ -18,12 +18,12 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$VideoFormat {
   String get url => throw _privateConstructorUsedError;
   String? get displayFormat => throw _privateConstructorUsedError;
-  int? get quality => throw _privateConstructorUsedError;
+  num? get quality => throw _privateConstructorUsedError;
   num? get width => throw _privateConstructorUsedError;
   num? get height => throw _privateConstructorUsedError;
   num? get aspectRatio => throw _privateConstructorUsedError;
   String? get resolution => throw _privateConstructorUsedError;
-  int? get bytes => throw _privateConstructorUsedError;
+  num? get bytes => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $VideoFormatCopyWith<VideoFormat> get copyWith =>
@@ -39,12 +39,12 @@ abstract class $VideoFormatCopyWith<$Res> {
   $Res call(
       {String url,
       String? displayFormat,
-      int? quality,
+      num? quality,
       num? width,
       num? height,
       num? aspectRatio,
       String? resolution,
-      int? bytes});
+      num? bytes});
 }
 
 /// @nodoc
@@ -81,7 +81,7 @@ class _$VideoFormatCopyWithImpl<$Res, $Val extends VideoFormat>
       quality: freezed == quality
           ? _value.quality
           : quality // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as num?,
       width: freezed == width
           ? _value.width
           : width // ignore: cast_nullable_to_non_nullable
@@ -101,7 +101,7 @@ class _$VideoFormatCopyWithImpl<$Res, $Val extends VideoFormat>
       bytes: freezed == bytes
           ? _value.bytes
           : bytes // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as num?,
     ) as $Val);
   }
 }
@@ -117,12 +117,12 @@ abstract class _$$_VideoFormatCopyWith<$Res>
   $Res call(
       {String url,
       String? displayFormat,
-      int? quality,
+      num? quality,
       num? width,
       num? height,
       num? aspectRatio,
       String? resolution,
-      int? bytes});
+      num? bytes});
 }
 
 /// @nodoc
@@ -157,7 +157,7 @@ class __$$_VideoFormatCopyWithImpl<$Res>
       quality: freezed == quality
           ? _value.quality
           : quality // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as num?,
       width: freezed == width
           ? _value.width
           : width // ignore: cast_nullable_to_non_nullable
@@ -177,7 +177,7 @@ class __$$_VideoFormatCopyWithImpl<$Res>
       bytes: freezed == bytes
           ? _value.bytes
           : bytes // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as num?,
     ));
   }
 }
@@ -200,7 +200,7 @@ class _$_VideoFormat implements _VideoFormat {
   @override
   final String? displayFormat;
   @override
-  final int? quality;
+  final num? quality;
   @override
   final num? width;
   @override
@@ -210,7 +210,7 @@ class _$_VideoFormat implements _VideoFormat {
   @override
   final String? resolution;
   @override
-  final int? bytes;
+  final num? bytes;
 
   @override
   String toString() {
@@ -250,19 +250,19 @@ abstract class _VideoFormat implements VideoFormat {
   const factory _VideoFormat(
       {required final String url,
       final String? displayFormat,
-      final int? quality,
+      final num? quality,
       final num? width,
       final num? height,
       final num? aspectRatio,
       final String? resolution,
-      final int? bytes}) = _$_VideoFormat;
+      final num? bytes}) = _$_VideoFormat;
 
   @override
   String get url;
   @override
   String? get displayFormat;
   @override
-  int? get quality;
+  num? get quality;
   @override
   num? get width;
   @override
@@ -272,7 +272,7 @@ abstract class _VideoFormat implements VideoFormat {
   @override
   String? get resolution;
   @override
-  int? get bytes;
+  num? get bytes;
   @override
   @JsonKey(ignore: true)
   _$$_VideoFormatCopyWith<_$_VideoFormat> get copyWith =>
@@ -287,7 +287,7 @@ mixin _$VideoInfo {
   String? get uploaderId => throw _privateConstructorUsedError;
   String? get filename => throw _privateConstructorUsedError;
   DateTime? get uploadDate => throw _privateConstructorUsedError;
-  int? get duration => throw _privateConstructorUsedError;
+  num? get duration => throw _privateConstructorUsedError;
   List<VideoFormat> get formats => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -307,7 +307,7 @@ abstract class $VideoInfoCopyWith<$Res> {
       String? uploaderId,
       String? filename,
       DateTime? uploadDate,
-      int? duration,
+      num? duration,
       List<VideoFormat> formats});
 }
 
@@ -361,7 +361,7 @@ class _$VideoInfoCopyWithImpl<$Res, $Val extends VideoInfo>
       duration: freezed == duration
           ? _value.duration
           : duration // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as num?,
       formats: null == formats
           ? _value.formats
           : formats // ignore: cast_nullable_to_non_nullable
@@ -384,7 +384,7 @@ abstract class _$$_VideoInfoCopyWith<$Res> implements $VideoInfoCopyWith<$Res> {
       String? uploaderId,
       String? filename,
       DateTime? uploadDate,
-      int? duration,
+      num? duration,
       List<VideoFormat> formats});
 }
 
@@ -436,7 +436,7 @@ class __$$_VideoInfoCopyWithImpl<$Res>
       duration: freezed == duration
           ? _value.duration
           : duration // ignore: cast_nullable_to_non_nullable
-              as int?,
+              as num?,
       formats: null == formats
           ? _value._formats
           : formats // ignore: cast_nullable_to_non_nullable
@@ -472,7 +472,7 @@ class _$_VideoInfo implements _VideoInfo {
   @override
   final DateTime? uploadDate;
   @override
-  final int? duration;
+  final num? duration;
   final List<VideoFormat> _formats;
   @override
   List<VideoFormat> get formats {
@@ -534,7 +534,7 @@ abstract class _VideoInfo implements VideoInfo {
       final String? uploaderId,
       final String? filename,
       final DateTime? uploadDate,
-      final int? duration,
+      final num? duration,
       required final List<VideoFormat> formats}) = _$_VideoInfo;
 
   @override
@@ -550,7 +550,7 @@ abstract class _VideoInfo implements VideoInfo {
   @override
   DateTime? get uploadDate;
   @override
-  int? get duration;
+  num? get duration;
   @override
   List<VideoFormat> get formats;
   @override

@@ -10,7 +10,7 @@ extension Nullable<T> on T? {
   }
 }
 
-String formatSize(int bytes, [decimals = 2]) {
+String formatSize(num bytes, [decimals = 2]) {
   const k = 1024;
   final dm = decimals < 0 ? 0 : decimals;
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
