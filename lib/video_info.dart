@@ -3,6 +3,16 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'video_info.freezed.dart';
 
 @freezed
+class VideoThumbnail with _$VideoThumbnail {
+  const factory VideoThumbnail({
+    required String url,
+    num? width,
+    num? height,
+    String? resolution,
+  }) = _VideoThumbnail;
+}
+
+@freezed
 class VideoFormat with _$VideoFormat {
   const factory VideoFormat({
     required String url,
@@ -27,5 +37,6 @@ class VideoInfo with _$VideoInfo {
     DateTime? uploadDate,
     num? duration,
     required List<VideoFormat> formats,
+    required List<VideoThumbnail> thumbnails,
   }) = _VideoInfo;
 }

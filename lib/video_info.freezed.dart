@@ -15,6 +15,177 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
 
 /// @nodoc
+mixin _$VideoThumbnail {
+  String get url => throw _privateConstructorUsedError;
+  num? get width => throw _privateConstructorUsedError;
+  num? get height => throw _privateConstructorUsedError;
+  String? get resolution => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $VideoThumbnailCopyWith<VideoThumbnail> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $VideoThumbnailCopyWith<$Res> {
+  factory $VideoThumbnailCopyWith(
+          VideoThumbnail value, $Res Function(VideoThumbnail) then) =
+      _$VideoThumbnailCopyWithImpl<$Res, VideoThumbnail>;
+  @useResult
+  $Res call({String url, num? width, num? height, String? resolution});
+}
+
+/// @nodoc
+class _$VideoThumbnailCopyWithImpl<$Res, $Val extends VideoThumbnail>
+    implements $VideoThumbnailCopyWith<$Res> {
+  _$VideoThumbnailCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? url = null,
+    Object? width = freezed,
+    Object? height = freezed,
+    Object? resolution = freezed,
+  }) {
+    return _then(_value.copyWith(
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      width: freezed == width
+          ? _value.width
+          : width // ignore: cast_nullable_to_non_nullable
+              as num?,
+      height: freezed == height
+          ? _value.height
+          : height // ignore: cast_nullable_to_non_nullable
+              as num?,
+      resolution: freezed == resolution
+          ? _value.resolution
+          : resolution // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$_VideoThumbnailCopyWith<$Res>
+    implements $VideoThumbnailCopyWith<$Res> {
+  factory _$$_VideoThumbnailCopyWith(
+          _$_VideoThumbnail value, $Res Function(_$_VideoThumbnail) then) =
+      __$$_VideoThumbnailCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String url, num? width, num? height, String? resolution});
+}
+
+/// @nodoc
+class __$$_VideoThumbnailCopyWithImpl<$Res>
+    extends _$VideoThumbnailCopyWithImpl<$Res, _$_VideoThumbnail>
+    implements _$$_VideoThumbnailCopyWith<$Res> {
+  __$$_VideoThumbnailCopyWithImpl(
+      _$_VideoThumbnail _value, $Res Function(_$_VideoThumbnail) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? url = null,
+    Object? width = freezed,
+    Object? height = freezed,
+    Object? resolution = freezed,
+  }) {
+    return _then(_$_VideoThumbnail(
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      width: freezed == width
+          ? _value.width
+          : width // ignore: cast_nullable_to_non_nullable
+              as num?,
+      height: freezed == height
+          ? _value.height
+          : height // ignore: cast_nullable_to_non_nullable
+              as num?,
+      resolution: freezed == resolution
+          ? _value.resolution
+          : resolution // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$_VideoThumbnail implements _VideoThumbnail {
+  const _$_VideoThumbnail(
+      {required this.url, this.width, this.height, this.resolution});
+
+  @override
+  final String url;
+  @override
+  final num? width;
+  @override
+  final num? height;
+  @override
+  final String? resolution;
+
+  @override
+  String toString() {
+    return 'VideoThumbnail(url: $url, width: $width, height: $height, resolution: $resolution)';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$_VideoThumbnail &&
+            (identical(other.url, url) || other.url == url) &&
+            (identical(other.width, width) || other.width == width) &&
+            (identical(other.height, height) || other.height == height) &&
+            (identical(other.resolution, resolution) ||
+                other.resolution == resolution));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, url, width, height, resolution);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$_VideoThumbnailCopyWith<_$_VideoThumbnail> get copyWith =>
+      __$$_VideoThumbnailCopyWithImpl<_$_VideoThumbnail>(this, _$identity);
+}
+
+abstract class _VideoThumbnail implements VideoThumbnail {
+  const factory _VideoThumbnail(
+      {required final String url,
+      final num? width,
+      final num? height,
+      final String? resolution}) = _$_VideoThumbnail;
+
+  @override
+  String get url;
+  @override
+  num? get width;
+  @override
+  num? get height;
+  @override
+  String? get resolution;
+  @override
+  @JsonKey(ignore: true)
+  _$$_VideoThumbnailCopyWith<_$_VideoThumbnail> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$VideoFormat {
   String get url => throw _privateConstructorUsedError;
   String? get displayFormat => throw _privateConstructorUsedError;
@@ -289,6 +460,7 @@ mixin _$VideoInfo {
   DateTime? get uploadDate => throw _privateConstructorUsedError;
   num? get duration => throw _privateConstructorUsedError;
   List<VideoFormat> get formats => throw _privateConstructorUsedError;
+  List<VideoThumbnail> get thumbnails => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $VideoInfoCopyWith<VideoInfo> get copyWith =>
@@ -308,7 +480,8 @@ abstract class $VideoInfoCopyWith<$Res> {
       String? filename,
       DateTime? uploadDate,
       num? duration,
-      List<VideoFormat> formats});
+      List<VideoFormat> formats,
+      List<VideoThumbnail> thumbnails});
 }
 
 /// @nodoc
@@ -332,6 +505,7 @@ class _$VideoInfoCopyWithImpl<$Res, $Val extends VideoInfo>
     Object? uploadDate = freezed,
     Object? duration = freezed,
     Object? formats = null,
+    Object? thumbnails = null,
   }) {
     return _then(_value.copyWith(
       provider: null == provider
@@ -366,6 +540,10 @@ class _$VideoInfoCopyWithImpl<$Res, $Val extends VideoInfo>
           ? _value.formats
           : formats // ignore: cast_nullable_to_non_nullable
               as List<VideoFormat>,
+      thumbnails: null == thumbnails
+          ? _value.thumbnails
+          : thumbnails // ignore: cast_nullable_to_non_nullable
+              as List<VideoThumbnail>,
     ) as $Val);
   }
 }
@@ -385,7 +563,8 @@ abstract class _$$_VideoInfoCopyWith<$Res> implements $VideoInfoCopyWith<$Res> {
       String? filename,
       DateTime? uploadDate,
       num? duration,
-      List<VideoFormat> formats});
+      List<VideoFormat> formats,
+      List<VideoThumbnail> thumbnails});
 }
 
 /// @nodoc
@@ -407,6 +586,7 @@ class __$$_VideoInfoCopyWithImpl<$Res>
     Object? uploadDate = freezed,
     Object? duration = freezed,
     Object? formats = null,
+    Object? thumbnails = null,
   }) {
     return _then(_$_VideoInfo(
       provider: null == provider
@@ -441,6 +621,10 @@ class __$$_VideoInfoCopyWithImpl<$Res>
           ? _value._formats
           : formats // ignore: cast_nullable_to_non_nullable
               as List<VideoFormat>,
+      thumbnails: null == thumbnails
+          ? _value._thumbnails
+          : thumbnails // ignore: cast_nullable_to_non_nullable
+              as List<VideoThumbnail>,
     ));
   }
 }
@@ -456,8 +640,10 @@ class _$_VideoInfo implements _VideoInfo {
       this.filename,
       this.uploadDate,
       this.duration,
-      required final List<VideoFormat> formats})
-      : _formats = formats;
+      required final List<VideoFormat> formats,
+      required final List<VideoThumbnail> thumbnails})
+      : _formats = formats,
+        _thumbnails = thumbnails;
 
   @override
   final String provider;
@@ -481,9 +667,17 @@ class _$_VideoInfo implements _VideoInfo {
     return EqualUnmodifiableListView(_formats);
   }
 
+  final List<VideoThumbnail> _thumbnails;
+  @override
+  List<VideoThumbnail> get thumbnails {
+    if (_thumbnails is EqualUnmodifiableListView) return _thumbnails;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_thumbnails);
+  }
+
   @override
   String toString() {
-    return 'VideoInfo(provider: $provider, title: $title, uploader: $uploader, uploaderId: $uploaderId, filename: $filename, uploadDate: $uploadDate, duration: $duration, formats: $formats)';
+    return 'VideoInfo(provider: $provider, title: $title, uploader: $uploader, uploaderId: $uploaderId, filename: $filename, uploadDate: $uploadDate, duration: $duration, formats: $formats, thumbnails: $thumbnails)';
   }
 
   @override
@@ -504,7 +698,9 @@ class _$_VideoInfo implements _VideoInfo {
                 other.uploadDate == uploadDate) &&
             (identical(other.duration, duration) ||
                 other.duration == duration) &&
-            const DeepCollectionEquality().equals(other._formats, _formats));
+            const DeepCollectionEquality().equals(other._formats, _formats) &&
+            const DeepCollectionEquality()
+                .equals(other._thumbnails, _thumbnails));
   }
 
   @override
@@ -517,7 +713,8 @@ class _$_VideoInfo implements _VideoInfo {
       filename,
       uploadDate,
       duration,
-      const DeepCollectionEquality().hash(_formats));
+      const DeepCollectionEquality().hash(_formats),
+      const DeepCollectionEquality().hash(_thumbnails));
 
   @JsonKey(ignore: true)
   @override
@@ -535,7 +732,8 @@ abstract class _VideoInfo implements VideoInfo {
       final String? filename,
       final DateTime? uploadDate,
       final num? duration,
-      required final List<VideoFormat> formats}) = _$_VideoInfo;
+      required final List<VideoFormat> formats,
+      required final List<VideoThumbnail> thumbnails}) = _$_VideoInfo;
 
   @override
   String get provider;
@@ -553,6 +751,8 @@ abstract class _VideoInfo implements VideoInfo {
   num? get duration;
   @override
   List<VideoFormat> get formats;
+  @override
+  List<VideoThumbnail> get thumbnails;
   @override
   @JsonKey(ignore: true)
   _$$_VideoInfoCopyWith<_$_VideoInfo> get copyWith =>

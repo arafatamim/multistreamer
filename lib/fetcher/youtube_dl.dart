@@ -20,7 +20,8 @@ class YouTubeDL implements Fetcher {
       filename: json["filename"],
       duration: json["duration"],
       uploadDate: (json["upload_date"] as String?).map(DateTime.tryParse),
-      formats: (json["formats"] as List<dynamic>)
+      formats: (json["formats"] as List<dynamic>?)
+          .orElse([])
           .map(
             (e) => VideoFormat(
               url: e["url"],
@@ -31,6 +32,17 @@ class YouTubeDL implements Fetcher {
               aspectRatio: e["aspect_ratio"],
               displayFormat: e["format"],
               bytes: e["filesize"] ?? e["filesize_approx"],
+            ),
+          )
+          .toList(),
+      thumbnails: (json["thumbnails"] as List<dynamic>?)
+          .orElse([])
+          .map(
+            (e) => VideoThumbnail(
+              url: e["url"],
+              width: e["width"],
+              height: e["height"],
+              resolution: e["resolution"],
             ),
           )
           .toList(),

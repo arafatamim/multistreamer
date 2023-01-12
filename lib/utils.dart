@@ -8,6 +8,22 @@ extension Nullable<T> on T? {
       return null;
     }
   }
+
+  S mapWithDefault<S>(S Function(T) f, S defaultValue) {
+    if (this != null) {
+      return f(this as T);
+    } else {
+      return defaultValue;
+    }
+  }
+
+  T orElse(T defaultValue) {
+    if (this != null) {
+      return this as T;
+    } else {
+      return defaultValue;
+    }
+  }
 }
 
 String formatSize(num bytes, [decimals = 2]) {
