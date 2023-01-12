@@ -87,6 +87,19 @@ class Header extends StatelessWidget {
       children: [
         Expanded(
           child: TextField(
+            focusNode: FocusNode(
+              onKey: (node, key) {
+                if (key is RawKeyDownEvent) {
+                  if (key.logicalKey == LogicalKeyboardKey.arrowDown) {
+                    node.nextFocus();
+                  }
+                  if (key.logicalKey == LogicalKeyboardKey.arrowUp) {
+                    node.previousFocus();
+                  }
+                }
+                return KeyEventResult.ignored;
+              },
+            ),
             controller: textEditingController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -98,14 +111,12 @@ class Header extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            if (textEditingController != null) {
-              onSubmit(textEditingController!.text);
-            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Under construction!"),
+              ),
+            );
           },
-          icon: const Icon(Icons.arrow_circle_right),
-        ),
-        IconButton(
-          onPressed: () {},
           icon: const Icon(Icons.settings),
         ),
       ],
@@ -123,6 +134,8 @@ class MyApp extends StatelessWidget {
     return Shortcuts(
       shortcuts: {
         LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowDown): const NextFocusIntent(),
+        LogicalKeySet(LogicalKeyboardKey.arrowUp): const PreviousFocusIntent(),
       },
       child: MaterialApp(
         title: 'MultiStreamer',
@@ -142,10 +155,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class VideoHeaders extends StatelessWidget {
+class MetaInfo extends StatelessWidget {
   final VideoInfo data;
 
-  const VideoHeaders({
+  const MetaInfo({
     Key? key,
     required this.data,
   }) : super(key: key);
@@ -157,13 +170,12 @@ class VideoHeaders extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(
-          [data.provider, data.uploader, data.uploaderId]
-              .where((element) => element != null)
-              .join(" - ")
-              .toUpperCase(),
-          style: const TextStyle(
-            fontSize: 18,
-          ),
+          [
+            data.provider,
+            data.uploader?.maybeExtend(data.uploaderId.map((str) => " ($str)")),
+            if (data.uploader == null) data.uploaderId
+          ].where((element) => element != null).join(" - ").toUpperCase(),
+          style: const TextStyle(fontSize: 18),
         ),
         const SizedBox(height: 8),
         Text(
@@ -225,10 +237,44 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
   late final StreamSubscription _incomingLinksSub;
   late final TextEditingController _textEditingController;
   late final StreamController<Deferred<VideoInfo>> _dataStreamController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final initialUrl = widget.initialUrl;
+
+    _textEditingController = TextEditingController(
+      text: initialUrl?.toString(),
+    );
+    _dataStreamController = StreamController();
+
+    if (initialUrl != null) {
+      _dataStreamController.add(const Deferred.inProgress());
+      _fetchJson(initialUrl);
+    } else {
+      _dataStreamController.add(const Deferred.idle());
+    }
+
+    if (Platform.isAndroid) {
+      _incomingLinksSub = appLinks.uriLinkStream.listen((link) {
+        _dataStreamController.add(const Deferred.inProgress());
+        setState(() {
+          _textEditingController.text = link.toString();
+        });
+        _fetchJson(link);
+      }, onError: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("$error")),
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -246,33 +292,50 @@ class _MyHomePageState extends State<MyHomePage> {
                   title: data.title,
                 );
               });
-              return Row(
+              return Stack(
                 children: [
-                  Flexible(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Header(
-                            onSubmit: _setUrl,
-                            textEditingController: _textEditingController,
-                          ),
-                          const Spacer(),
-                          VideoHeaders(data: data),
-                        ],
+                  if (data.thumbnails.isNotEmpty)
+                    Opacity(
+                      opacity: 0.08,
+                      child: FadeInImage.memoryNetwork(
+                        placeholder: kTransparentImage,
+                        image: data.thumbnails.last.url,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        imageErrorBuilder: (context, error, stackTrace) =>
+                            const SizedBox.shrink(),
                       ),
                     ),
+                  Row(
+                    children: [
+                      Flexible(
+                        flex: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Header(
+                                onSubmit: _setUrl,
+                                textEditingController: _textEditingController,
+                              ),
+                              const Spacer(),
+                              MetaInfo(data: data),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Flexible(
+                        flex: 1,
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: VideoSources(data: data),
+                        ),
+                      )
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Flexible(
-                    flex: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: VideoSources(data: data),
-                    ),
-                  )
                 ],
               );
             },
@@ -322,39 +385,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _textEditingController.dispose();
     _dataStreamController.close();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    final initialUrl = widget.initialUrl;
-
-    _textEditingController = TextEditingController(
-      text: initialUrl?.toString(),
-    );
-    _dataStreamController = StreamController();
-
-    if (initialUrl != null) {
-      _dataStreamController.add(const Deferred.inProgress());
-      _fetchJson(initialUrl);
-    } else {
-      _dataStreamController.add(const Deferred.idle());
-    }
-
-    if (Platform.isAndroid) {
-      _incomingLinksSub = appLinks.uriLinkStream.listen((link) {
-        _dataStreamController.add(const Deferred.inProgress());
-        setState(() {
-          _textEditingController.text = link.toString();
-        });
-        _fetchJson(link);
-      }, onError: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("$error")),
-        );
-      });
-    }
   }
 
   void _fetchJson(Uri url) async {
