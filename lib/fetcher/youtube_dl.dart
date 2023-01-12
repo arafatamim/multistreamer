@@ -53,7 +53,7 @@ class YouTubeDL implements Fetcher {
     } else if (Platform.isAndroid) {
       final data = await methodChannel.invokeMethod<String>(
         "dumpJson",
-        {"url": url},
+        {"url": url.toString()},
       ).then(
         (value) {
           if (value == null) {
