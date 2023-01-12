@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' show log, pow;
 
-import "package:multistreamer/utils.dart";
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:app_links/app_links.dart';
 import 'package:deferred_type/deferred_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:multistreamer/fetcher/youtube_dl.dart';
+import "package:multistreamer/utils.dart";
 import 'package:multistreamer/video_info.dart';
+
+final appLinks = AppLinks();
 
 void main(List<String> argv) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,19 +24,6 @@ void main(List<String> argv) async {
   } on StateError {
     runApp(const MyApp());
   }
-}
-
-const kTag = "main.dart";
-
-final appLinks = AppLinks();
-
-String formatSize(int bytes, [decimals = 2]) {
-  const k = 1024;
-  final dm = decimals < 0 ? 0 : decimals;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-
-  final i = (log(bytes) / log(k)).floor();
-  return "${(bytes / pow(k, i)).toStringAsFixed(dm)} ${sizes[i]}";
 }
 
 Future<void> launchIntent({required String url, required String title}) {
@@ -131,18 +120,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MultiStreamer',
-      theme: ThemeData(
-        colorScheme: const ColorScheme.dark(
-          surface: Colors.transparent,
-          secondary: Colors.pink,
-          primary: Colors.pink,
-        ),
-      ),
-      home: MyHomePage(
+    return Shortcuts(
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
+      },
+      child: MaterialApp(
         title: 'MultiStreamer',
-        initialUrl: initialUrl,
+        theme: ThemeData(
+          colorScheme: const ColorScheme.dark(
+            surface: Colors.transparent,
+            secondary: Colors.pink,
+            primary: Colors.pink,
+          ),
+        ),
+        home: MyHomePage(
+          title: 'MultiStreamer',
+          initialUrl: initialUrl,
+        ),
       ),
     );
   }
