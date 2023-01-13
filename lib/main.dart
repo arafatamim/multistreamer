@@ -263,6 +263,8 @@ class _MyHomePageState extends State<MyHomePage>
 
     if (Platform.isAndroid) {
       _incomingLinksSub = appLinks.uriLinkStream.listen((link) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+
         _dataStreamController.add(const Deferred.inProgress());
         setState(() {
           _textEditingController.text = link.toString();
@@ -389,7 +391,6 @@ class _MyHomePageState extends State<MyHomePage>
 
   void _fetchJson(Uri url) async {
     VideoInfo videoInfo;
-
     try {
       videoInfo = await YouTubeDL().fetchVideoInfo(url);
       _dataStreamController.add(Deferred.success(videoInfo));
