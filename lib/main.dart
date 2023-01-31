@@ -8,6 +8,8 @@ import 'package:deferred_type/deferred_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:multistreamer/fetcher/fetcher.dart';
 import 'package:multistreamer/fetcher/youtube_dl.dart';
 import "package:multistreamer/utils.dart";
 import 'package:multistreamer/video_info.dart';
@@ -16,6 +18,7 @@ final appLinks = AppLinks();
 
 void main(List<String> argv) async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
   try {
     final initialLink = Platform.isAndroid
         ? await appLinks.getInitialAppLink()
@@ -390,9 +393,17 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _fetchJson(Uri url) async {
-    VideoInfo videoInfo;
+    Fetcher fetcher;
+
     try {
-      videoInfo = await YouTubeDL().fetchVideoInfo(url);
+      switch (url.host) {
+        default:
+          fetcher = YouTubeDL();
+      }
+      await fetcher.initialize();
+      VideoInfo videoInfo = await fetcher.fetchVideoInfo(url);
+      fetcher.dispose();
+
       _dataStreamController.add(Deferred.success(videoInfo));
     } catch (e, stack) {
       _dataStreamController.add(Deferred.error(e, stack));

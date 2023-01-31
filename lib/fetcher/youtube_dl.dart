@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:multistreamer/fetcher/fetcher.dart';
 import 'package:multistreamer/video_info.dart';
 
-class YouTubeDL implements Fetcher {
+class YouTubeDL extends Fetcher {
   final methodChannel = const MethodChannel(
     "com.arafatamim.multistreamer/youtubedl",
   );
