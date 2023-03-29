@@ -13,12 +13,16 @@ import 'package:multistreamer/fetcher/fetcher.dart';
 import 'package:multistreamer/fetcher/youtube_dl.dart';
 import "package:multistreamer/utils.dart";
 import 'package:multistreamer/video_info.dart';
+import 'package:multistreamer/settings_page.dart';
+import 'package:multistreamer/preferred_video_resolution.dart';
 
 final appLinks = AppLinks();
 
 void main(List<String> argv) async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+  Hive.registerAdapter(PreferredVideoResolutionAdapter());
+  await Hive.openBox("settings");
   try {
     final initialLink = Platform.isAndroid
         ? await appLinks.getInitialAppLink()
@@ -114,11 +118,7 @@ class Header extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Under construction!"),
-              ),
-            );
+            Navigator.of(context).pushNamed("/settings");
           },
           icon: const Icon(Icons.settings),
         ),
@@ -149,10 +149,13 @@ class MyApp extends StatelessWidget {
             primary: Colors.pink,
           ),
         ),
-        home: MyHomePage(
-          title: 'MultiStreamer',
-          initialUrl: initialUrl,
-        ),
+        routes: {
+          "/": (context) => HomePage(
+                title: "MultiStreamer",
+                initialUrl: initialUrl,
+              ),
+          "/settings": (context) => const SettingsPage()
+        },
       ),
     );
   }
@@ -230,17 +233,17 @@ class VideoSources extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class HomePage extends StatefulWidget {
   final String title;
 
   final Uri? initialUrl;
-  const MyHomePage({super.key, required this.title, this.initialUrl});
+  const HomePage({super.key, required this.title, this.initialUrl});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
+class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late final StreamSubscription _incomingLinksSub;
   late final TextEditingController _textEditingController;
@@ -284,100 +287,134 @@ class _MyHomePageState extends State<MyHomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder<Deferred<VideoInfo>>(
-        initialData: const Deferred.idle(),
-        stream: _dataStreamController.stream,
-        builder: (context, snapshot) {
-          final data = snapshot.data as Deferred<VideoInfo>;
-          return data.when(
-            success: (data) {
-              SchedulerBinding.instance.addPostFrameCallback((_) {
-                launchIntent(
-                  url: data.formats.last.url,
-                  title: data.title,
-                );
-              });
-              return Stack(
-                children: [
-                  if (data.thumbnails.isNotEmpty)
-                    Opacity(
-                      opacity: 0.08,
-                      child: FadeInImage.memoryNetwork(
-                        placeholder: kTransparentImage,
-                        image: data.thumbnails.last.url,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                        imageErrorBuilder: (context, error, stackTrace) =>
-                            const SizedBox.shrink(),
-                      ),
-                    ),
-                  Row(
+      body: ValueListenableBuilder(
+        valueListenable: Hive.box("settings").listenable(),
+        builder: (context, box, _) {
+          final preferredResolution = box.get(
+            "preferredQuality",
+            defaultValue: PreferredVideoResolution.p1080,
+          ) as PreferredVideoResolution;
+          final automaticLaunch =
+              box.get("automaticLaunch", defaultValue: false);
+
+          return StreamBuilder<Deferred<VideoInfo>>(
+            initialData: const Deferred.idle(),
+            stream: _dataStreamController.stream,
+            builder: (context, snapshot) {
+              final data = snapshot.data as Deferred<VideoInfo>;
+              return data.when(
+                success: (data) {
+                  if (automaticLaunch) {
+                    SchedulerBinding.instance.addPostFrameCallback(
+                      (_) {
+                        String urlToLaunch = data.formats.first.url;
+                        if (preferredResolution ==
+                            PreferredVideoResolution.maximum) {
+                          urlToLaunch = data.formats.last.url;
+                        } else {
+                          for (var format in data.formats) {
+                            final normalized = normalizeResolution(
+                              format.width,
+                              format.height,
+                            );
+                            if (normalized == preferredResolution) {
+                              urlToLaunch = format.url;
+                              break;
+                            }
+                          }
+                        }
+                        launchIntent(
+                          url: urlToLaunch,
+                          title: data.title,
+                        );
+                      },
+                    );
+                  }
+
+                  return Stack(
                     children: [
-                      Flexible(
-                        flex: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Header(
-                                onSubmit: _setUrl,
-                                textEditingController: _textEditingController,
-                              ),
-                              const Spacer(),
-                              MetaInfo(data: data),
-                            ],
+                      if (data.thumbnails.isNotEmpty)
+                        Opacity(
+                          opacity: 0.08,
+                          child: FadeInImage.memoryNetwork(
+                            placeholder: kTransparentImage,
+                            image: data.thumbnails.last.url,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            imageErrorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.shrink(),
                           ),
                         ),
+                      Row(
+                        children: [
+                          Flexible(
+                            flex: 2,
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Header(
+                                    onSubmit: _setUrl,
+                                    textEditingController:
+                                        _textEditingController,
+                                  ),
+                                  const Spacer(),
+                                  MetaInfo(data: data),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Flexible(
+                            flex: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: VideoSources(data: data),
+                            ),
+                          )
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Flexible(
-                        flex: 1,
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: VideoSources(data: data),
-                        ),
-                      )
                     ],
+                  );
+                },
+                error: (err, stackTrace) {
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("$err"),
+                        duration: const Duration(seconds: 15),
+                      ),
+                    );
+                  });
+                  return Boilerplate(
+                    controller: _textEditingController,
+                    onSubmit: _setUrl,
+                    child: const Center(
+                      child: Icon(Icons.error),
+                    ),
+                  );
+                },
+                inProgress: () => Boilerplate(
+                  controller: _textEditingController,
+                  onSubmit: _setUrl,
+                  child: const Center(
+                    child: CircularProgressIndicator(),
                   ),
-                ],
-              );
-            },
-            error: (err, stackTrace) {
-              SchedulerBinding.instance.addPostFrameCallback((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("$err"),
-                    duration: const Duration(seconds: 15),
+                ),
+                idle: () => Boilerplate(
+                  controller: _textEditingController,
+                  onSubmit: _setUrl,
+                  child: Center(
+                    child: Text(
+                      widget.title,
+                      style: const TextStyle(color: Colors.white30),
+                    ),
                   ),
-                );
-              });
-              return Boilerplate(
-                controller: _textEditingController,
-                onSubmit: _setUrl,
-                child: const Center(
-                  child: Icon(Icons.error),
                 ),
               );
             },
-            inProgress: () => Boilerplate(
-              controller: _textEditingController,
-              onSubmit: _setUrl,
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            idle: () => Boilerplate(
-              controller: _textEditingController,
-              onSubmit: _setUrl,
-              child: Center(
-                child: Text(
-                  widget.title,
-                  style: const TextStyle(color: Colors.white30),
-                ),
-              ),
-            ),
           );
         },
       ),

@@ -1,6 +1,8 @@
 import 'dart:math' show log, pow;
 import 'dart:typed_data';
 
+import 'package:multistreamer/preferred_video_resolution.dart';
+
 extension StringExtension on String {
   String maybeExtend(String? str) {
     if (str != null) {
@@ -43,6 +45,60 @@ String formatSize(num bytes, [decimals = 2]) {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   final i = (log(bytes) / log(k)).floor();
   return "${(bytes / pow(k, i)).toStringAsFixed(dm)} ${sizes[i]}";
+}
+
+PreferredVideoResolution normalizeResolution(
+  num? width,
+  num? height,
+) {
+  num smallerSide = 0;
+  if (width == null && height != null) {
+    smallerSide = height;
+  }
+  if (width != null && height == null) {
+    smallerSide = width;
+  }
+  if (width != null && height != null) {
+    if (width < height) {
+      smallerSide = width;
+    } else {
+      smallerSide = height;
+    }
+  }
+
+  const sizes = [360, 480, 720, 1080, 1440, 2160];
+  final closest = findClosestNumber(smallerSide.toInt(), sizes);
+  switch (closest) {
+    case 360:
+      return PreferredVideoResolution.p360;
+    case 480:
+      return PreferredVideoResolution.p480;
+    case 720:
+      return PreferredVideoResolution.p720;
+    case 1080:
+      return PreferredVideoResolution.p1080;
+    case 1440:
+      return PreferredVideoResolution.p1440;
+    case 2160:
+      return PreferredVideoResolution.p2160;
+    default:
+      return PreferredVideoResolution.maximum;
+  }
+}
+
+int findClosestNumber(int inputNumber, List<int> numbers) {
+  int closestNumber = numbers[0];
+  int smallestDifference = (inputNumber - closestNumber).abs();
+
+  for (int i = 1; i < numbers.length; i++) {
+    int currentDifference = (inputNumber - numbers[i]).abs();
+    if (currentDifference < smallestDifference) {
+      smallestDifference = currentDifference;
+      closestNumber = numbers[i];
+    }
+  }
+
+  return closestNumber;
 }
 
 final Uint8List kTransparentImage = Uint8List.fromList(<int>[
