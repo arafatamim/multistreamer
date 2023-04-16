@@ -28,7 +28,12 @@ Future<void> launchIntent({required String url, required String title}) {
       Flag.FLAG_GRANT_WRITE_URI_PERMISSION,
       Flag.FLAG_GRANT_READ_URI_PERMISSION
     ],
-    arguments: {"title": title},
+    arguments: {
+      "title": title,
+    },
+    arrayArguments: {
+      "headers": ["referer", url],
+    },
   );
   return intent.launch();
 }
@@ -441,7 +446,7 @@ class _HomePageState extends State<HomePage>
                           padding: const EdgeInsets.all(32.0),
                           child: VideoSources(data: data),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ],

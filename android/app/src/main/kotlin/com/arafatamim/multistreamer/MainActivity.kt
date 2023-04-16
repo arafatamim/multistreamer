@@ -83,7 +83,7 @@ class MainActivity : FlutterActivity() {
         }
         "updateLibrary" -> {
           val disposable =
-              Observable.fromCallable { YoutubeDL.getInstance().updateYoutubeDL(getApplication()) }
+              Observable.fromCallable { YoutubeDL.getInstance().updateYoutubeDL(getApplication(), YoutubeDL.UpdateChannel.STABLE) }
                   .subscribeOn(Schedulers.newThread())
                   .observeOn(AndroidSchedulers.mainThread())
                   .subscribe(

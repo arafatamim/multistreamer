@@ -20,21 +20,23 @@ class YouTubeDL extends Fetcher {
       filename: json["filename"],
       duration: json["duration"],
       uploadDate: (json["upload_date"] as String?).map(DateTime.tryParse),
-      formats: (json["formats"] as List<dynamic>?)
-          .orElse([])
-          .map(
-            (e) => VideoFormat(
-              url: e["url"],
-              quality: e["quality"],
-              width: e["width"] as num?,
-              height: e["height"] as num?,
-              resolution: e["resolution"],
-              aspectRatio: e["aspect_ratio"],
-              displayFormat: e["format"],
-              bytes: e["filesize"] ?? e["filesize_approx"],
-            ),
-          )
-          .toList(),
+      formats: (json["formats"] as List<dynamic>?).orElse([]).map(
+        (e) {
+          final quality = e["quality"];
+          return VideoFormat(
+            url: e["url"],
+            quality: quality != null
+                ? (quality is num ? quality : num.tryParse(quality))
+                : null,
+            width: e["width"] as num?,
+            height: e["height"] as num?,
+            resolution: e["resolution"],
+            aspectRatio: e["aspect_ratio"],
+            displayFormat: e["format"],
+            bytes: e["filesize"] ?? e["filesize_approx"],
+          );
+        },
+      ).toList(),
       thumbnails: (json["thumbnails"] as List<dynamic>?)
           .orElse([])
           .map(
