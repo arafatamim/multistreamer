@@ -35,12 +35,19 @@ class MainActivity : FlutterActivity() {
       when (call.method) {
         "dumpJson" -> {
           val url = call.argument<String>("url")
+          val legacyServerConnect = call.argument<Boolean>("legacyServerConnect")
+
           val disposable =
               Observable.fromCallable {
-                    val request = YoutubeDLRequest(url)
-                    request.addOption("--skip-download")
-                    request.addOption("--dump-json")
-                    YoutubeDL.getInstance().execute(request)
+                      val request = YoutubeDLRequest(url!!)
+                      request.addOption("--skip-download")
+                      request.addOption("--dump-json")
+
+                      if (legacyServerConnect != null && legacyServerConnect) {
+                        request.addOption("--legacy-server-connect")
+                      }
+
+                      YoutubeDL.getInstance().execute(request)
                   }
                   .subscribeOn(Schedulers.newThread())
                   .observeOn(AndroidSchedulers.mainThread())
@@ -54,21 +61,21 @@ class MainActivity : FlutterActivity() {
           val url = call.argument<String>("url")
           val disposable =
               Observable.fromCallable {
-                    val request = YoutubeDLRequest(url)
+                    val request = YoutubeDLRequest(url!!)
                     request.addOption("-f", "best")
                     YoutubeDL.getInstance().getInfo(request)
                   }
                   .subscribeOn(Schedulers.newThread())
                   .observeOn(AndroidSchedulers.mainThread())
                   .subscribe(
-                      { info -> result.success(info.getUrl()) },
+                      { info -> result.success(info.url) },
                       { e -> result.error("YoutubeDLException", e.message, null) }
                   )
           compositeDisposable.add(disposable)
         }
         "fetchThumbnail" -> {
           val url = call.argument<String>("url")
-          val request = YoutubeDLRequest(url)
+          val request = YoutubeDLRequest(url!!)
           request.addOption("--get-thumbnail")
           try {
             val resp = YoutubeDL.getInstance().execute(request)
@@ -83,7 +90,10 @@ class MainActivity : FlutterActivity() {
         }
         "updateLibrary" -> {
           val disposable =
-              Observable.fromCallable { YoutubeDL.getInstance().updateYoutubeDL(getApplication(), YoutubeDL.UpdateChannel.STABLE) }
+              Observable.fromCallable {
+                    YoutubeDL.getInstance()
+                        .updateYoutubeDL(getApplication(), YoutubeDL.UpdateChannel.STABLE)
+                  }
                   .subscribeOn(Schedulers.newThread())
                   .observeOn(AndroidSchedulers.mainThread())
                   .subscribe(

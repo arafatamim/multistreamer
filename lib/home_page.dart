@@ -240,7 +240,7 @@ class _HomePageState extends State<HomePage>
 
     if (initialUrl != null) {
       _dataStreamController.add(const Deferred.inProgress());
-      _fetchJson(initialUrl);
+      _fetchVideoInfo(initialUrl);
     } else {
       _dataStreamController.add(const Deferred.idle());
     }
@@ -254,7 +254,7 @@ class _HomePageState extends State<HomePage>
           setState(() {
             _textEditingController.text = link.toString();
           });
-          _fetchJson(link);
+          _fetchVideoInfo(link);
         },
         onError: (error) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -534,7 +534,7 @@ class _HomePageState extends State<HomePage>
     super.dispose();
   }
 
-  void _fetchJson(Uri url) async {
+  void _fetchVideoInfo(Uri url) async {
     Fetcher fetcher;
 
     try {
@@ -556,7 +556,7 @@ class _HomePageState extends State<HomePage>
     try {
       final url = Uri.parse(value);
       _dataStreamController.add(const Deferred.inProgress());
-      _fetchJson(url);
+      _fetchVideoInfo(url);
     } on FormatException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Not a valid URL!")),

@@ -1,6 +1,7 @@
 import 'dart:convert' show jsonDecode;
 import 'dart:io' show Process, Platform;
 
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:multistreamer/utils.dart';
 import 'package:flutter/services.dart';
 import 'package:multistreamer/fetcher/fetcher.dart';
@@ -53,10 +54,21 @@ class YouTubeDL extends Fetcher {
 
   @override
   Future<VideoInfo> fetchVideoInfo(Uri url) async {
+    final hive = Hive.box("settings");
+
+    final legacyServerConnect = hive.get(
+      "legacyServerConnect",
+      defaultValue: false,
+    ) as bool;
+
     if (Platform.isLinux) {
       final process = await Process.run(
         "yt-dlp",
-        ["--dump-json", url.toString()],
+        [
+          "--dump-json",
+          if (legacyServerConnect) "--legacy-server-connect",
+          url.toString()
+        ],
       );
       if (process.stdout == "" && process.stderr.trim() != "") {
         throw Exception(process.stderr);
@@ -67,7 +79,10 @@ class YouTubeDL extends Fetcher {
     } else if (Platform.isAndroid) {
       final data = await methodChannel.invokeMethod<String>(
         "dumpJson",
-        {"url": url.toString()},
+        {
+          "url": url.toString(),
+          "legacyServerConnect": legacyServerConnect,
+        },
       ).then(
         (value) {
           if (value == null) {

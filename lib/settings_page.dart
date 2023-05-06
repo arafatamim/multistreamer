@@ -2,6 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:multistreamer/preferred_video_resolution.dart';
 
+class SettingsSectionTile extends StatelessWidget {
+  final String title;
+
+  const SettingsSectionTile({
+    super.key,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(18),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+      ),
+    );
+  }
+}
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -38,8 +62,14 @@ class _SettingsPageState extends State<SettingsPage> {
             "automaticLaunch",
             defaultValue: false,
           );
-          final preferredQuality = box.get("preferredQuality",
-              defaultValue: PreferredVideoResolution.p1080);
+          final preferredQuality = box.get(
+            "preferredQuality",
+            defaultValue: PreferredVideoResolution.p1080,
+          );
+          final legacyServerConnect = box.get(
+            "legacyServerConnect",
+            defaultValue: false,
+          );
 
           return ListView(
             children: [
@@ -73,7 +103,19 @@ class _SettingsPageState extends State<SettingsPage> {
                         }
                       : null,
                 ),
-              )
+              ),
+              const SettingsSectionTile(title: "youtube-dl Options"),
+              CheckboxListTile(
+                title: const Text("Legacy server connection"),
+                subtitle: const Text(
+                    "Explicitly allow HTTPS connection to servers that do not support RFC 5746 secure renegotiation"),
+                value: legacyServerConnect,
+                onChanged: (value) {
+                  if (value != null) {
+                    box.put("legacyServerConnect", value);
+                  }
+                },
+              ),
             ],
           );
         },
