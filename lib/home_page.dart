@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:app_links/app_links.dart';
-import 'package:deferred_type/deferred_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -239,10 +238,10 @@ class _HomePageState extends State<HomePage>
     _dataStreamController = StreamController();
 
     if (initialUrl != null) {
-      _dataStreamController.add(const Deferred.inProgress());
+      _dataStreamController.add(const InProgress());
       _fetchVideoInfo(initialUrl);
     } else {
-      _dataStreamController.add(const Deferred.idle());
+      _dataStreamController.add(const Idle());
     }
 
     if (Platform.isAndroid) {
@@ -250,7 +249,7 @@ class _HomePageState extends State<HomePage>
         (link) {
           ScaffoldMessenger.of(context).clearSnackBars();
 
-          _dataStreamController.add(const Deferred.inProgress());
+          _dataStreamController.add(const InProgress());
           setState(() {
             _textEditingController.text = link.toString();
           });
@@ -323,68 +322,68 @@ class _HomePageState extends State<HomePage>
       body: Padding(
         padding: const EdgeInsets.all(8),
         child: StreamBuilder<Deferred<VideoInfo>>(
-          initialData: const Deferred.idle(),
+          initialData: const Idle(),
           stream: _dataStreamController.stream,
           builder: (context, snapshot) {
             final data = snapshot.data as Deferred<VideoInfo>;
-            return data.when(
-              success: (data) {
-                if (automaticLaunch) {
-                  _launchStream(data, preferredVideoResolution);
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Header(
-                      onSubmit: _setUrl,
-                      textEditingController: _textEditingController,
-                      settingsButton: false,
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black12,
-                        borderRadius: BorderRadius.circular(8),
+            switch (data) {
+              case Success(result: final data):
+                {
+                  if (automaticLaunch) {
+                    _launchStream(data, preferredVideoResolution);
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Header(
+                        onSubmit: _setUrl,
+                        textEditingController: _textEditingController,
+                        settingsButton: false,
                       ),
-                      padding: const EdgeInsets.all(16),
-                      child: MetaInfo(data: data),
-                    ),
-                    const SizedBox(height: 8),
-                    Flexible(
-                      flex: 1,
-                      child: VideoSources(data: data),
-                    )
-                  ],
-                );
-              },
-              error: (err, stackTrace) {
-                SchedulerBinding.instance.addPostFrameCallback((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("$err"),
-                      duration: const Duration(seconds: 15),
-                    ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: MetaInfo(data: data),
+                      ),
+                      const SizedBox(height: 8),
+                      Flexible(
+                        flex: 1,
+                        child: VideoSources(data: data),
+                      )
+                    ],
                   );
-                });
-                return Header(
-                  onSubmit: _setUrl,
-                  textEditingController: _textEditingController,
-                  settingsButton: false,
-                );
-              },
-              inProgress: () {
+                }
+              case Error(error: final err):
+                {
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("$err"),
+                        duration: const Duration(seconds: 15),
+                      ),
+                    );
+                  });
+                  return Header(
+                    onSubmit: _setUrl,
+                    textEditingController: _textEditingController,
+                    settingsButton: false,
+                  );
+                }
+              case InProgress():
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
-              },
-              idle: () {
+              case Idle():
                 return Header(
                   onSubmit: _setUrl,
                   textEditingController: _textEditingController,
                   settingsButton: false,
                 );
-              },
-            );
+            }
           },
         ),
       ),
@@ -395,100 +394,104 @@ class _HomePageState extends State<HomePage>
       bool automaticLaunch, PreferredVideoResolution preferredVideoResolution) {
     return Scaffold(
       body: StreamBuilder<Deferred<VideoInfo>>(
-        initialData: const Deferred.idle(),
+        initialData: const Idle(),
         stream: _dataStreamController.stream,
         builder: (context, snapshot) {
           final data = snapshot.data as Deferred<VideoInfo>;
-          return data.when(
-            success: (data) {
-              if (automaticLaunch) {
-                _launchStream(data, preferredVideoResolution);
-              }
+          switch (data) {
+            case Success(result: final data):
+              {
+                if (automaticLaunch) {
+                  _launchStream(data, preferredVideoResolution);
+                }
 
-              return Stack(
-                children: [
-                  if (data.thumbnails.isNotEmpty)
-                    Opacity(
-                      opacity: 0.08,
-                      child: FadeInImage.memoryNetwork(
-                        placeholder: kTransparentImage,
-                        image: data.thumbnails.last.url,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                        imageErrorBuilder: (context, error, stackTrace) =>
-                            const SizedBox.shrink(),
+                return Stack(
+                  children: [
+                    if (data.thumbnails.isNotEmpty)
+                      Opacity(
+                        opacity: 0.08,
+                        child: FadeInImage.memoryNetwork(
+                          placeholder: kTransparentImage,
+                          image: data.thumbnails.last.url,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          imageErrorBuilder: (context, error, stackTrace) =>
+                              const SizedBox.shrink(),
+                        ),
                       ),
-                    ),
-                  Row(
-                    children: [
-                      Flexible(
-                        flex: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Header(
-                                onSubmit: _setUrl,
-                                textEditingController: _textEditingController,
-                              ),
-                              const Spacer(),
-                              MetaInfo(data: data),
-                            ],
+                    Row(
+                      children: [
+                        Flexible(
+                          flex: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Header(
+                                  onSubmit: _setUrl,
+                                  textEditingController: _textEditingController,
+                                ),
+                                const Spacer(),
+                                MetaInfo(data: data),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Flexible(
-                        flex: 1,
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: VideoSources(data: data),
+                        const SizedBox(width: 16),
+                        Flexible(
+                          flex: 1,
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: VideoSources(data: data),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-            error: (err, stackTrace) {
-              SchedulerBinding.instance.addPostFrameCallback(
-                (_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("$err"),
-                      duration: const Duration(seconds: 15),
+                      ],
                     ),
-                  );
-                },
-              );
+                  ],
+                );
+              }
+            case Error(error: final err):
+              {
+                SchedulerBinding.instance.addPostFrameCallback(
+                  (_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("$err"),
+                        duration: const Duration(seconds: 15),
+                      ),
+                    );
+                  },
+                );
+                return LandscapeBoilerplate(
+                  controller: _textEditingController,
+                  onSubmit: _setUrl,
+                  child: const Center(
+                    child: Icon(Icons.error),
+                  ),
+                );
+              }
+            case InProgress():
               return LandscapeBoilerplate(
                 controller: _textEditingController,
                 onSubmit: _setUrl,
                 child: const Center(
-                  child: Icon(Icons.error),
+                  child: CircularProgressIndicator(),
                 ),
               );
-            },
-            inProgress: () => LandscapeBoilerplate(
-              controller: _textEditingController,
-              onSubmit: _setUrl,
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            idle: () => LandscapeBoilerplate(
-              controller: _textEditingController,
-              onSubmit: _setUrl,
-              child: Center(
-                child: Text(
-                  widget.title,
-                  style: const TextStyle(color: Colors.white30),
+            case Idle():
+              return LandscapeBoilerplate(
+                controller: _textEditingController,
+                onSubmit: _setUrl,
+                child: Center(
+                  child: Text(
+                    widget.title,
+                    style: const TextStyle(color: Colors.white30),
+                  ),
                 ),
-              ),
-            ),
-          );
+              );
+          }
         },
       ),
     );
@@ -546,16 +549,16 @@ class _HomePageState extends State<HomePage>
       VideoInfo videoInfo = await fetcher.fetchVideoInfo(url);
       fetcher.dispose();
 
-      _dataStreamController.add(Deferred.success(videoInfo));
+      _dataStreamController.add(Success(videoInfo));
     } catch (e, stack) {
-      _dataStreamController.add(Deferred.error(e, stack));
+      _dataStreamController.add(Error(e, stack));
     }
   }
 
   void _setUrl(String value) {
     try {
       final url = Uri.parse(value);
-      _dataStreamController.add(const Deferred.inProgress());
+      _dataStreamController.add(const InProgress());
       _fetchVideoInfo(url);
     } on FormatException {
       ScaffoldMessenger.of(context).showSnackBar(

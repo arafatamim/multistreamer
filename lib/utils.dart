@@ -101,6 +101,29 @@ int findClosestNumber(int inputNumber, List<int> numbers) {
   return closestNumber;
 }
 
+sealed class Deferred<T> {
+  const Deferred();
+}
+
+final class Idle<T> extends Deferred<T> {
+  const Idle();
+}
+
+final class InProgress<T> extends Deferred<T> {
+  const InProgress();
+}
+
+final class Success<T> extends Deferred<T> {
+  final T result;
+  const Success(this.result);
+}
+
+final class Error<T> extends Deferred<T> {
+  final Object error;
+  final StackTrace? stackTrace;
+  const Error(this.error, [this.stackTrace]);
+}
+
 final Uint8List kTransparentImage = Uint8List.fromList(<int>[
   0x89,
   0x50,
