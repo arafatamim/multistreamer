@@ -96,6 +96,9 @@ class SearchBox extends StatelessWidget {
       controller: textEditingController,
       decoration: const InputDecoration(
         border: OutlineInputBorder(),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.white30),
+        ),
         hintText: "Share or enter a url to play...",
       ),
       textInputAction: TextInputAction.go,

@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: title,
         theme: ThemeData(
+          useMaterial3: true,
           colorScheme: const ColorScheme.dark(
             surface: Colors.transparent,
             secondary: Colors.pink,
