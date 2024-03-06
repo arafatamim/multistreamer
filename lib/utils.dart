@@ -2,6 +2,29 @@ import 'dart:math' show log, pow;
 import 'dart:typed_data';
 
 import 'package:multistreamer/preferred_video_resolution.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
+
+Future<void> launchIntent({required String url, required String title}) {
+  final intent = AndroidIntent(
+    action: "action_view",
+    data: url,
+    type: "video/*",
+    flags: [
+      Flag.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
+      Flag.FLAG_GRANT_PREFIX_URI_PERMISSION,
+      Flag.FLAG_GRANT_WRITE_URI_PERMISSION,
+      Flag.FLAG_GRANT_READ_URI_PERMISSION
+    ],
+    arguments: {
+      "title": title,
+    },
+    arrayArguments: {
+      "headers": ["referer", url],
+    },
+  );
+  return intent.launch();
+}
 
 extension StringExtension on String {
   String maybeExtend(String? str) {

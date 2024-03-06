@@ -4,9 +4,9 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:multistreamer/home_page.dart';
+import 'package:multistreamer/pages/home_page.dart';
+import 'package:multistreamer/pages/settings_page.dart';
 import 'package:multistreamer/preferred_video_resolution.dart';
-import 'package:multistreamer/settings_page.dart';
 
 void main(List<String> argv) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,12 +39,11 @@ class MyApp extends StatelessWidget {
       },
       child: MaterialApp(
         title: title,
-        theme: ThemeData(
-          useMaterial3: true,
+        theme: ThemeData.dark(useMaterial3: true).copyWith(
           colorScheme: const ColorScheme.dark(
-            surface: Colors.transparent,
-            secondary: Colors.pink,
             primary: Colors.pink,
+            secondary: Colors.pink,
+            tertiary: Colors.pink,
           ),
         ),
         routes: {

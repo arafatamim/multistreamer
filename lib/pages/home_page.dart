@@ -1,48 +1,27 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_intent_plus/flag.dart';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:multistreamer/fetcher/fetcher.dart';
 import 'package:multistreamer/fetcher/youtube_dl.dart';
 import 'package:multistreamer/preferred_video_resolution.dart';
 import 'package:multistreamer/utils.dart';
 import 'package:multistreamer/video_info.dart';
+import 'package:multistreamer/widgets/header.dart';
+import 'package:multistreamer/widgets/meta_info.dart';
+import 'package:multistreamer/widgets/video_sources.dart';
 
 final appLinks = AppLinks();
 
-Future<void> launchIntent({required String url, required String title}) {
-  final intent = AndroidIntent(
-    action: "action_view",
-    data: url,
-    type: "video/*",
-    flags: [
-      Flag.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
-      Flag.FLAG_GRANT_PREFIX_URI_PERMISSION,
-      Flag.FLAG_GRANT_WRITE_URI_PERMISSION,
-      Flag.FLAG_GRANT_READ_URI_PERMISSION
-    ],
-    arguments: {
-      "title": title,
-    },
-    arrayArguments: {
-      "headers": ["referer", url],
-    },
-  );
-  return intent.launch();
-}
-
-class LandscapeBoilerplate extends StatelessWidget {
+class LandscapeLayout extends StatelessWidget {
   final ValueSetter<String> onSubmit;
   final TextEditingController? controller;
   final Widget child;
 
-  const LandscapeBoilerplate({
+  const LandscapeLayout({
     super.key,
     required this.onSubmit,
     required this.child,
@@ -63,152 +42,6 @@ class LandscapeBoilerplate extends StatelessWidget {
           Expanded(child: child)
         ],
       ),
-    );
-  }
-}
-
-class SearchBox extends StatelessWidget {
-  final TextEditingController? textEditingController;
-  final ValueSetter<String> onSubmit;
-
-  const SearchBox({
-    super.key,
-    this.textEditingController,
-    required this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      focusNode: FocusNode(
-        onKey: (node, key) {
-          if (key is RawKeyDownEvent) {
-            if (key.logicalKey == LogicalKeyboardKey.arrowDown) {
-              node.nextFocus();
-            }
-            if (key.logicalKey == LogicalKeyboardKey.arrowUp) {
-              node.previousFocus();
-            }
-          }
-          return KeyEventResult.ignored;
-        },
-      ),
-      controller: textEditingController,
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white30),
-        ),
-        hintText: "Share or enter a url to play...",
-      ),
-      textInputAction: TextInputAction.go,
-      onSubmitted: onSubmit,
-    );
-  }
-}
-
-class Header extends StatelessWidget {
-  final TextEditingController? textEditingController;
-  final ValueSetter<String> onSubmit;
-  final bool settingsButton;
-
-  const Header({
-    super.key,
-    this.textEditingController,
-    this.settingsButton = true,
-    required this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: SearchBox(
-            onSubmit: onSubmit,
-            textEditingController: textEditingController,
-          ),
-        ),
-        if (settingsButton)
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).pushNamed("/settings");
-            },
-            icon: const Icon(Icons.settings),
-          ),
-      ],
-    );
-  }
-}
-
-class MetaInfo extends StatelessWidget {
-  final VideoInfo data;
-
-  const MetaInfo({
-    Key? key,
-    required this.data,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(
-          [
-            data.provider,
-            data.uploader?.maybeExtend(data.uploaderId.map((str) => " ($str)")),
-            if (data.uploader == null) data.uploaderId
-          ].where((element) => element != null).join(" - ").toUpperCase(),
-          style: const TextStyle(fontSize: 18),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          data.title,
-          style: const TextStyle(fontSize: 24),
-        ),
-      ],
-    );
-  }
-}
-
-class VideoSources extends StatelessWidget {
-  final VideoInfo data;
-
-  const VideoSources({
-    super.key,
-    required this.data,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      shrinkWrap: true,
-      children: [
-        for (final item in data.formats.reversed) ...[
-          ListTile(
-            title: Text(item.resolution ?? "Unknown resolution"),
-            subtitle: Text(
-              [
-                item.displayFormat,
-                item.bytes.map(formatSize),
-              ].where((element) => element != null).join(" - "),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            tileColor: Colors.black12,
-            onTap: () async {
-              await launchIntent(
-                url: item.url,
-                title: data.title,
-              );
-            },
-          ),
-          const SizedBox(height: 8)
-        ]
-      ],
     );
   }
 }
@@ -267,7 +100,7 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  void _launchStream(
+  void _launchPlayer(
     VideoInfo data,
     PreferredVideoResolution preferredResolution,
   ) {
@@ -333,7 +166,7 @@ class _HomePageState extends State<HomePage>
               case Success(result: final data):
                 {
                   if (automaticLaunch) {
-                    _launchStream(data, preferredVideoResolution);
+                    _launchPlayer(data, preferredVideoResolution);
                   }
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,7 +238,7 @@ class _HomePageState extends State<HomePage>
             case Success(result: final data):
               {
                 if (automaticLaunch) {
-                  _launchStream(data, preferredVideoResolution);
+                  _launchPlayer(data, preferredVideoResolution);
                 }
 
                 return Stack(
@@ -467,7 +300,7 @@ class _HomePageState extends State<HomePage>
                     );
                   },
                 );
-                return LandscapeBoilerplate(
+                return LandscapeLayout(
                   controller: _textEditingController,
                   onSubmit: _setUrl,
                   child: const Center(
@@ -476,15 +309,14 @@ class _HomePageState extends State<HomePage>
                 );
               }
             case InProgress():
-              return LandscapeBoilerplate(
-                controller: _textEditingController,
+              return LandscapeLayout(
                 onSubmit: _setUrl,
                 child: const Center(
                   child: CircularProgressIndicator(),
                 ),
               );
             case Idle():
-              return LandscapeBoilerplate(
+              return LandscapeLayout(
                 controller: _textEditingController,
                 onSubmit: _setUrl,
                 child: Center(
@@ -565,7 +397,9 @@ class _HomePageState extends State<HomePage>
       _fetchVideoInfo(url);
     } on FormatException {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Not a valid URL!")),
+        const SnackBar(
+          content: Text("Not a valid URL!"),
+        ),
       );
     }
   }
