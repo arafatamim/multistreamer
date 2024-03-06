@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:multistreamer/video_info.dart';
 import 'package:multistreamer/utils.dart';
 
@@ -28,6 +29,15 @@ class VideoSources extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             tileColor: Colors.black12,
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: item.url)).then((value) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Copied url to clipboard"),
+                  ),
+                );
+              });
+            },
             onTap: () async {
               await launchIntent(
                 url: item.url,
