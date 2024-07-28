@@ -3,7 +3,7 @@
 Android app to stream videos from [various sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) using [youtube-dl](https://github.com/yt-dlp/yt-dlp).
 Optimized for the big screen.
 
-![multistreamer_scr_wide](https://user-images.githubusercontent.com/31634638/236617104-48848013-5cf1-4410-ab53-958224bb5903.jpg)
+![multistreamer_scr_wide_v1.1.0](https://github.com/user-attachments/assets/3bc6ed7e-ea17-4e6e-bc2d-0ca04ce71cfb)
 
 ## Downloads
 
