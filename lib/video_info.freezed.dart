@@ -12,7 +12,7 @@ part of 'video_info.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
 mixin _$VideoThumbnail {
@@ -75,22 +75,22 @@ class _$VideoThumbnailCopyWithImpl<$Res, $Val extends VideoThumbnail>
 }
 
 /// @nodoc
-abstract class _$$_VideoThumbnailCopyWith<$Res>
+abstract class _$$VideoThumbnailImplCopyWith<$Res>
     implements $VideoThumbnailCopyWith<$Res> {
-  factory _$$_VideoThumbnailCopyWith(
-          _$_VideoThumbnail value, $Res Function(_$_VideoThumbnail) then) =
-      __$$_VideoThumbnailCopyWithImpl<$Res>;
+  factory _$$VideoThumbnailImplCopyWith(_$VideoThumbnailImpl value,
+          $Res Function(_$VideoThumbnailImpl) then) =
+      __$$VideoThumbnailImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String url, num? width, num? height, String? resolution});
 }
 
 /// @nodoc
-class __$$_VideoThumbnailCopyWithImpl<$Res>
-    extends _$VideoThumbnailCopyWithImpl<$Res, _$_VideoThumbnail>
-    implements _$$_VideoThumbnailCopyWith<$Res> {
-  __$$_VideoThumbnailCopyWithImpl(
-      _$_VideoThumbnail _value, $Res Function(_$_VideoThumbnail) _then)
+class __$$VideoThumbnailImplCopyWithImpl<$Res>
+    extends _$VideoThumbnailCopyWithImpl<$Res, _$VideoThumbnailImpl>
+    implements _$$VideoThumbnailImplCopyWith<$Res> {
+  __$$VideoThumbnailImplCopyWithImpl(
+      _$VideoThumbnailImpl _value, $Res Function(_$VideoThumbnailImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -101,7 +101,7 @@ class __$$_VideoThumbnailCopyWithImpl<$Res>
     Object? height = freezed,
     Object? resolution = freezed,
   }) {
-    return _then(_$_VideoThumbnail(
+    return _then(_$VideoThumbnailImpl(
       url: null == url
           ? _value.url
           : url // ignore: cast_nullable_to_non_nullable
@@ -124,8 +124,8 @@ class __$$_VideoThumbnailCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$_VideoThumbnail implements _VideoThumbnail {
-  const _$_VideoThumbnail(
+class _$VideoThumbnailImpl implements _VideoThumbnail {
+  const _$VideoThumbnailImpl(
       {required this.url, this.width, this.height, this.resolution});
 
   @override
@@ -143,10 +143,10 @@ class _$_VideoThumbnail implements _VideoThumbnail {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$_VideoThumbnail &&
+            other is _$VideoThumbnailImpl &&
             (identical(other.url, url) || other.url == url) &&
             (identical(other.width, width) || other.width == width) &&
             (identical(other.height, height) || other.height == height) &&
@@ -160,8 +160,9 @@ class _$_VideoThumbnail implements _VideoThumbnail {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$_VideoThumbnailCopyWith<_$_VideoThumbnail> get copyWith =>
-      __$$_VideoThumbnailCopyWithImpl<_$_VideoThumbnail>(this, _$identity);
+  _$$VideoThumbnailImplCopyWith<_$VideoThumbnailImpl> get copyWith =>
+      __$$VideoThumbnailImplCopyWithImpl<_$VideoThumbnailImpl>(
+          this, _$identity);
 }
 
 abstract class _VideoThumbnail implements VideoThumbnail {
@@ -169,7 +170,7 @@ abstract class _VideoThumbnail implements VideoThumbnail {
       {required final String url,
       final num? width,
       final num? height,
-      final String? resolution}) = _$_VideoThumbnail;
+      final String? resolution}) = _$VideoThumbnailImpl;
 
   @override
   String get url;
@@ -181,7 +182,7 @@ abstract class _VideoThumbnail implements VideoThumbnail {
   String? get resolution;
   @override
   @JsonKey(ignore: true)
-  _$$_VideoThumbnailCopyWith<_$_VideoThumbnail> get copyWith =>
+  _$$VideoThumbnailImplCopyWith<_$VideoThumbnailImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -278,11 +279,11 @@ class _$VideoFormatCopyWithImpl<$Res, $Val extends VideoFormat>
 }
 
 /// @nodoc
-abstract class _$$_VideoFormatCopyWith<$Res>
+abstract class _$$VideoFormatImplCopyWith<$Res>
     implements $VideoFormatCopyWith<$Res> {
-  factory _$$_VideoFormatCopyWith(
-          _$_VideoFormat value, $Res Function(_$_VideoFormat) then) =
-      __$$_VideoFormatCopyWithImpl<$Res>;
+  factory _$$VideoFormatImplCopyWith(
+          _$VideoFormatImpl value, $Res Function(_$VideoFormatImpl) then) =
+      __$$VideoFormatImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -297,11 +298,11 @@ abstract class _$$_VideoFormatCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$_VideoFormatCopyWithImpl<$Res>
-    extends _$VideoFormatCopyWithImpl<$Res, _$_VideoFormat>
-    implements _$$_VideoFormatCopyWith<$Res> {
-  __$$_VideoFormatCopyWithImpl(
-      _$_VideoFormat _value, $Res Function(_$_VideoFormat) _then)
+class __$$VideoFormatImplCopyWithImpl<$Res>
+    extends _$VideoFormatCopyWithImpl<$Res, _$VideoFormatImpl>
+    implements _$$VideoFormatImplCopyWith<$Res> {
+  __$$VideoFormatImplCopyWithImpl(
+      _$VideoFormatImpl _value, $Res Function(_$VideoFormatImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -316,7 +317,7 @@ class __$$_VideoFormatCopyWithImpl<$Res>
     Object? resolution = freezed,
     Object? bytes = freezed,
   }) {
-    return _then(_$_VideoFormat(
+    return _then(_$VideoFormatImpl(
       url: null == url
           ? _value.url
           : url // ignore: cast_nullable_to_non_nullable
@@ -355,8 +356,8 @@ class __$$_VideoFormatCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$_VideoFormat implements _VideoFormat {
-  const _$_VideoFormat(
+class _$VideoFormatImpl implements _VideoFormat {
+  const _$VideoFormatImpl(
       {required this.url,
       this.displayFormat,
       this.quality,
@@ -389,10 +390,10 @@ class _$_VideoFormat implements _VideoFormat {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$_VideoFormat &&
+            other is _$VideoFormatImpl &&
             (identical(other.url, url) || other.url == url) &&
             (identical(other.displayFormat, displayFormat) ||
                 other.displayFormat == displayFormat) &&
@@ -413,8 +414,8 @@ class _$_VideoFormat implements _VideoFormat {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$_VideoFormatCopyWith<_$_VideoFormat> get copyWith =>
-      __$$_VideoFormatCopyWithImpl<_$_VideoFormat>(this, _$identity);
+  _$$VideoFormatImplCopyWith<_$VideoFormatImpl> get copyWith =>
+      __$$VideoFormatImplCopyWithImpl<_$VideoFormatImpl>(this, _$identity);
 }
 
 abstract class _VideoFormat implements VideoFormat {
@@ -426,7 +427,7 @@ abstract class _VideoFormat implements VideoFormat {
       final num? height,
       final num? aspectRatio,
       final String? resolution,
-      final num? bytes}) = _$_VideoFormat;
+      final num? bytes}) = _$VideoFormatImpl;
 
   @override
   String get url;
@@ -446,7 +447,7 @@ abstract class _VideoFormat implements VideoFormat {
   num? get bytes;
   @override
   @JsonKey(ignore: true)
-  _$$_VideoFormatCopyWith<_$_VideoFormat> get copyWith =>
+  _$$VideoFormatImplCopyWith<_$VideoFormatImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -549,10 +550,11 @@ class _$VideoInfoCopyWithImpl<$Res, $Val extends VideoInfo>
 }
 
 /// @nodoc
-abstract class _$$_VideoInfoCopyWith<$Res> implements $VideoInfoCopyWith<$Res> {
-  factory _$$_VideoInfoCopyWith(
-          _$_VideoInfo value, $Res Function(_$_VideoInfo) then) =
-      __$$_VideoInfoCopyWithImpl<$Res>;
+abstract class _$$VideoInfoImplCopyWith<$Res>
+    implements $VideoInfoCopyWith<$Res> {
+  factory _$$VideoInfoImplCopyWith(
+          _$VideoInfoImpl value, $Res Function(_$VideoInfoImpl) then) =
+      __$$VideoInfoImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -568,11 +570,11 @@ abstract class _$$_VideoInfoCopyWith<$Res> implements $VideoInfoCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$$_VideoInfoCopyWithImpl<$Res>
-    extends _$VideoInfoCopyWithImpl<$Res, _$_VideoInfo>
-    implements _$$_VideoInfoCopyWith<$Res> {
-  __$$_VideoInfoCopyWithImpl(
-      _$_VideoInfo _value, $Res Function(_$_VideoInfo) _then)
+class __$$VideoInfoImplCopyWithImpl<$Res>
+    extends _$VideoInfoCopyWithImpl<$Res, _$VideoInfoImpl>
+    implements _$$VideoInfoImplCopyWith<$Res> {
+  __$$VideoInfoImplCopyWithImpl(
+      _$VideoInfoImpl _value, $Res Function(_$VideoInfoImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -588,7 +590,7 @@ class __$$_VideoInfoCopyWithImpl<$Res>
     Object? formats = null,
     Object? thumbnails = null,
   }) {
-    return _then(_$_VideoInfo(
+    return _then(_$VideoInfoImpl(
       provider: null == provider
           ? _value.provider
           : provider // ignore: cast_nullable_to_non_nullable
@@ -631,8 +633,8 @@ class __$$_VideoInfoCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$_VideoInfo implements _VideoInfo {
-  const _$_VideoInfo(
+class _$VideoInfoImpl implements _VideoInfo {
+  const _$VideoInfoImpl(
       {required this.provider,
       required this.title,
       this.uploader,
@@ -681,10 +683,10 @@ class _$_VideoInfo implements _VideoInfo {
   }
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$_VideoInfo &&
+            other is _$VideoInfoImpl &&
             (identical(other.provider, provider) ||
                 other.provider == provider) &&
             (identical(other.title, title) || other.title == title) &&
@@ -719,8 +721,8 @@ class _$_VideoInfo implements _VideoInfo {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$_VideoInfoCopyWith<_$_VideoInfo> get copyWith =>
-      __$$_VideoInfoCopyWithImpl<_$_VideoInfo>(this, _$identity);
+  _$$VideoInfoImplCopyWith<_$VideoInfoImpl> get copyWith =>
+      __$$VideoInfoImplCopyWithImpl<_$VideoInfoImpl>(this, _$identity);
 }
 
 abstract class _VideoInfo implements VideoInfo {
@@ -733,7 +735,7 @@ abstract class _VideoInfo implements VideoInfo {
       final DateTime? uploadDate,
       final num? duration,
       required final List<VideoFormat> formats,
-      required final List<VideoThumbnail> thumbnails}) = _$_VideoInfo;
+      required final List<VideoThumbnail> thumbnails}) = _$VideoInfoImpl;
 
   @override
   String get provider;
@@ -755,6 +757,6 @@ abstract class _VideoInfo implements VideoInfo {
   List<VideoThumbnail> get thumbnails;
   @override
   @JsonKey(ignore: true)
-  _$$_VideoInfoCopyWith<_$_VideoInfo> get copyWith =>
+  _$$VideoInfoImplCopyWith<_$VideoInfoImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

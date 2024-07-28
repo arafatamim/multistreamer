@@ -13,6 +13,25 @@ import io.reactivex.rxjava3.core.*
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 
+fun parseArgs(args: String): List<Pair<String, String>> {
+  // parse args like --proxy 0.0.0.0 --force-ipv6 to List<Pair<String, String>> with boolean keys as empty values
+  val argsList = args.split(" ").toMutableList()
+  val argsMap = mutableListOf<Pair<String, String>>()
+  var key: String? = null
+  for (arg in argsList) {
+    if (arg.startsWith("--")) {
+      key = arg.substring(2)
+      argsMap.add(Pair(key, ""))
+    } else {
+      if (key != null) {
+        argsMap[argsMap.size - 1] = Pair(key, arg)
+        key = null
+      }
+    }
+  }
+  return argsMap
+}
+
 class MainActivity : FlutterActivity() {
   private val compositeDisposable = CompositeDisposable()
 
@@ -36,6 +55,8 @@ class MainActivity : FlutterActivity() {
         "dumpJson" -> {
           val url = call.argument<String>("url")
           val legacyServerConnect = call.argument<Boolean>("legacyServerConnect")
+          val noCheckCertificates = call.argument<Boolean>("noCheckCertificates")
+          val extraArgs = call.argument<String>("extraArgs")
 
           val disposable =
               Observable.fromCallable {
@@ -45,6 +66,21 @@ class MainActivity : FlutterActivity() {
 
                       if (legacyServerConnect != null && legacyServerConnect) {
                         request.addOption("--legacy-server-connect")
+                      }
+
+                      if (noCheckCertificates != null && noCheckCertificates) {
+                        request.addOption("--no-check-certificates")
+                      }
+
+                      if (extraArgs != null) {
+                        val args = parseArgs(extraArgs)
+                        for (arg in args) {
+                          if (arg.second.isEmpty()) {
+                            request.addOption("--${arg.first}")
+                          } else {
+                            request.addOption("--${arg.first}", arg.second)
+                          }
+                        }
                       }
 
                       YoutubeDL.getInstance().execute(request)
@@ -85,8 +121,15 @@ class MainActivity : FlutterActivity() {
           }
         }
         "getVersion" -> {
-          YoutubeDL.getInstance().version(this)?.let { version -> result.success(version) }
-              ?: run { result.error("YoutubeDLException", "Version could not be loaded", null) }
+          val disposable =
+              Observable.fromCallable { YoutubeDL.getInstance().versionName(this) }
+                  .subscribeOn(Schedulers.newThread())
+                  .observeOn(AndroidSchedulers.mainThread())
+                  .subscribe(
+                      { version -> result.success(version) },
+                      { e -> result.error("YoutubeDLException", e.message, null) }
+                  )
+          compositeDisposable.add(disposable)
         }
         "updateLibrary" -> {
           val disposable =

@@ -28,7 +28,6 @@ class Header extends StatelessWidget {
           IconButton(
             onPressed: () {
               Navigator.of(context).pushNamed("/settings");
-              Navigator.of(context).pushNamed("/settings");
             },
             icon: const Icon(Icons.settings),
           ),

@@ -14,8 +14,6 @@ import 'package:multistreamer/widgets/header.dart';
 import 'package:multistreamer/widgets/meta_info.dart';
 import 'package:multistreamer/widgets/video_sources.dart';
 
-final appLinks = AppLinks();
-
 class LandscapeLayout extends StatelessWidget {
   final ValueSetter<String> onSubmit;
   final TextEditingController? controller;
@@ -46,6 +44,49 @@ class LandscapeLayout extends StatelessWidget {
   }
 }
 
+class ErrorPanel extends StatelessWidget {
+  final Object error;
+
+  const ErrorPanel({
+    super.key,
+    required this.error,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Error"),
+              content: SingleChildScrollView(
+                child: SelectableText(
+                  "$error",
+                  style: const TextStyle(
+                    fontFamily: "monospace",
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Close"),
+                )
+              ],
+            );
+          },
+        );
+      },
+      icon: const Icon(Icons.error),
+      label: const Text("An error occurred while fetching media"),
+    );
+  }
+}
+
 class HomePage extends StatefulWidget {
   final String title;
 
@@ -58,13 +99,18 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-  late final StreamSubscription _incomingLinksSub;
+  late final AppLinks _appLinks;
+
+  late final StreamSubscription<Uri> _incomingLinksSub;
   late final TextEditingController _textEditingController;
   late final StreamController<Deferred<VideoInfo>> _dataStreamController;
+  late final Stream<Deferred<VideoInfo>> _broadcastStream;
 
   @override
   void initState() {
     super.initState();
+
+    _appLinks = AppLinks();
 
     final initialUrl = widget.initialUrl;
 
@@ -72,6 +118,7 @@ class _HomePageState extends State<HomePage>
       text: initialUrl?.toString(),
     );
     _dataStreamController = StreamController();
+    _broadcastStream = _dataStreamController.stream.asBroadcastStream();
 
     if (initialUrl != null) {
       _dataStreamController.add(const InProgress());
@@ -81,7 +128,7 @@ class _HomePageState extends State<HomePage>
     }
 
     if (Platform.isAndroid) {
-      _incomingLinksSub = appLinks.uriLinkStream.listen(
+      _incomingLinksSub = _appLinks.uriLinkStream.listen(
         (link) {
           ScaffoldMessenger.of(context).clearSnackBars();
 
@@ -111,7 +158,7 @@ class _HomePageState extends State<HomePage>
           urlToLaunch = data.formats.last.url;
         } else {
           for (var format in data.formats) {
-            final normalized = normalizeResolution(
+            final normalized = approximateResolution(
               format.width,
               format.height,
             );
@@ -134,104 +181,123 @@ class _HomePageState extends State<HomePage>
     PreferredVideoResolution preferredVideoResolution,
   ) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          PopupMenuButton(
-            itemBuilder: (context) {
-              return [
-                const PopupMenuItem(
-                  value: 0,
-                  child: Text("Settings"),
-                )
-              ];
-            },
-            onSelected: (value) {
-              switch (value) {
-                case 0:
-                  Navigator.of(context).pushNamed("/settings");
-              }
-            },
-          )
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: StreamBuilder<Deferred<VideoInfo>>(
-          initialData: const Idle(),
-          stream: _dataStreamController.stream,
-          builder: (context, snapshot) {
-            final data = snapshot.data as Deferred<VideoInfo>;
-            switch (data) {
-              case Success(result: final data):
-                {
-                  if (automaticLaunch) {
-                    _launchPlayer(data, preferredVideoResolution);
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar.large(
+            title: Text(widget.title),
+            actions: [
+              PopupMenuButton(
+                itemBuilder: (context) {
+                  return [
+                    const PopupMenuItem(
+                      value: 0,
+                      child: Text("Settings"),
+                    )
+                  ];
+                },
+                onSelected: (value) {
+                  switch (value) {
+                    case 0:
+                      Navigator.of(context).pushNamed("/settings");
                   }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Header(
+                },
+              )
+            ],
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.only(
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            sliver: StreamBuilder<Deferred<VideoInfo>>(
+              initialData: const Idle(),
+              stream: _broadcastStream,
+              builder: (context, snapshot) {
+                final data = snapshot.data as Deferred<VideoInfo>;
+                switch (data) {
+                  case Success(result: final data):
+                    {
+                      if (automaticLaunch) {
+                        _launchPlayer(data, preferredVideoResolution);
+                      }
+                      return SliverMainAxisGroup(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Header(
+                              onSubmit: _setUrl,
+                              textEditingController: _textEditingController,
+                              settingsButton: false,
+                            ),
+                          ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                          SliverToBoxAdapter(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black12,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.all(16),
+                              child: MetaInfo(data: data),
+                            ),
+                          ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                          SliverVideoSources(data: data),
+                        ],
+                      );
+                    }
+                  case Error(error: final err):
+                    {
+                      return SliverMainAxisGroup(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Header(
+                              onSubmit: _setUrl,
+                              textEditingController: _textEditingController,
+                              settingsButton: false,
+                            ),
+                          ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                          SliverToBoxAdapter(
+                            child: ErrorPanel(error: err),
+                          ),
+                        ],
+                      );
+                    }
+                  case InProgress():
+                    return const SliverPadding(
+                      padding: EdgeInsets.all(16),
+                      sliver: SliverToBoxAdapter(
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    );
+                  case Idle():
+                    return SliverToBoxAdapter(
+                      child: Header(
                         onSubmit: _setUrl,
                         textEditingController: _textEditingController,
                         settingsButton: false,
                       ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black12,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: MetaInfo(data: data),
-                      ),
-                      const SizedBox(height: 8),
-                      Flexible(
-                        flex: 1,
-                        child: VideoSources(data: data),
-                      )
-                    ],
-                  );
-                }
-              case Error(error: final err):
-                {
-                  SchedulerBinding.instance.addPostFrameCallback((_) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("$err"),
-                        duration: const Duration(seconds: 15),
-                      ),
                     );
-                  });
-                  return Header(
-                    onSubmit: _setUrl,
-                    textEditingController: _textEditingController,
-                    settingsButton: false,
-                  );
                 }
-              case InProgress():
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              case Idle():
-                return Header(
-                  onSubmit: _setUrl,
-                  textEditingController: _textEditingController,
-                  settingsButton: false,
-                );
-            }
-          },
-        ),
+              },
+            ),
+          )
+        ],
       ),
     );
   }
 
   Widget _buildLandscapeLayout(
-      bool automaticLaunch, PreferredVideoResolution preferredVideoResolution) {
+    bool automaticLaunch,
+    PreferredVideoResolution preferredVideoResolution,
+  ) {
     return Scaffold(
       body: StreamBuilder<Deferred<VideoInfo>>(
         initialData: const Idle(),
-        stream: _dataStreamController.stream,
+        stream: _broadcastStream,
         builder: (context, snapshot) {
           final data = snapshot.data as Deferred<VideoInfo>;
           switch (data) {
@@ -245,7 +311,7 @@ class _HomePageState extends State<HomePage>
                   children: [
                     if (data.thumbnails.isNotEmpty)
                       Opacity(
-                        opacity: 0.08,
+                        opacity: 0.20,
                         child: FadeInImage.memoryNetwork(
                           placeholder: kTransparentImage,
                           image: data.thumbnails.last.url,
@@ -290,21 +356,11 @@ class _HomePageState extends State<HomePage>
               }
             case Error(error: final err):
               {
-                SchedulerBinding.instance.addPostFrameCallback(
-                  (_) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("$err"),
-                        duration: const Duration(seconds: 15),
-                      ),
-                    );
-                  },
-                );
                 return LandscapeLayout(
                   controller: _textEditingController,
                   onSubmit: _setUrl,
-                  child: const Center(
-                    child: Icon(Icons.error),
+                  child: Center(
+                    child: ErrorPanel(error: err),
                   ),
                 );
               }
@@ -322,7 +378,7 @@ class _HomePageState extends State<HomePage>
                 child: Center(
                   child: Text(
                     widget.title,
-                    style: const TextStyle(color: Colors.white30),
+                    style: TextStyle(color: Theme.of(context).hintColor),
                   ),
                 ),
               );

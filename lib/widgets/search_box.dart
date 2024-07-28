@@ -31,6 +31,10 @@ class SearchBox extends StatelessWidget {
       decoration: InputDecoration(
         isDense: true,
         filled: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 15,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: BorderSide.none,

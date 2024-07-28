@@ -66,7 +66,7 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "com.github.yausername.youtubedl-android:library:-SNAPSHOT"
+    implementation "io.github.junkfood02.youtubedl-android:library:0.16.0"
     implementation "io.reactivex.rxjava3:rxjava:3.1.5"
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
 }

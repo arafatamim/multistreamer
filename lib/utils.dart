@@ -70,7 +70,7 @@ String formatSize(num bytes, [decimals = 2]) {
   return "${(bytes / pow(k, i)).toStringAsFixed(dm)} ${sizes[i]}";
 }
 
-PreferredVideoResolution normalizeResolution(
+PreferredVideoResolution approximateResolution(
   num? width,
   num? height,
 ) {

@@ -60,16 +60,21 @@ class YouTubeDL extends Fetcher {
       "legacyServerConnect",
       defaultValue: false,
     ) as bool;
+    final noCheckCertificates = hive.get(
+      "noCheckCertificates",
+      defaultValue: false,
+    ) as bool;
+    final extraArgs = hive.get("extraArgs") as String?;
 
     if (Platform.isLinux) {
-      final process = await Process.run(
-        "yt-dlp",
-        [
-          "--dump-json",
-          if (legacyServerConnect) "--legacy-server-connect",
-          url.toString()
-        ],
-      );
+      final args = [
+        "--dump-json",
+        if (legacyServerConnect) "--legacy-server-connect",
+        if (noCheckCertificates) "--no-check-certificates",
+        if (extraArgs != null) ...extraArgs.split(" "),
+        url.toString()
+      ];
+      final process = await Process.run("yt-dlp", args);
       if (process.stdout == "" && process.stderr.trim() != "") {
         throw Exception(process.stderr);
       } else {
@@ -82,6 +87,8 @@ class YouTubeDL extends Fetcher {
         {
           "url": url.toString(),
           "legacyServerConnect": legacyServerConnect,
+          "noCheckCertificates": noCheckCertificates,
+          "extraArgs": extraArgs,
         },
       ).then(
         (value) {
@@ -92,6 +99,28 @@ class YouTubeDL extends Fetcher {
         },
       );
       return data;
+    } else {
+      throw UnimplementedError("Only Linux & Android supported!");
+    }
+  }
+
+  @override
+  Future<FetcherMeta> getMeta() async {
+    final version = await getVersion();
+    if (version == null) {
+      throw Exception("Failed to get yt-dlp version!");
+    }
+    return FetcherMeta(
+      name: "yt-dlp",
+      version: version,
+    );
+  }
+
+  Future<String?> getVersion() {
+    if (Platform.isLinux) {
+      return Process.run("yt-dlp", ["--version"]).then((res) => res.stdout);
+    } else if (Platform.isAndroid) {
+      return methodChannel.invokeMethod<String>("getVersion");
     } else {
       throw UnimplementedError("Only Linux & Android supported!");
     }
